@@ -115,22 +115,25 @@ const ChatRoomPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
-            className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+            className="rounded-md bg-primary-50 p-1.5 text-primary-600 transition-colors hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50"
             title="New chatroom"
           >
-            <Plus size={16} />
+            <Plus size={14} />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto scrollbar-thin">
           {chatrooms.length === 0 ? (
-            <div className="p-4 text-center text-xs text-slate-500">
-              No chatrooms yet.
+            <div className="flex flex-col items-center px-4 py-8 text-center">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-100 to-purple-100 dark:from-primary-900/30 dark:to-purple-900/30">
+                <MessageSquare className="text-primary-500" size={20} />
+              </div>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-300">No chatrooms yet</p>
               <button
                 type="button"
                 onClick={() => setCreateOpen(true)}
-                className="mt-2 block w-full text-primary-600 hover:underline dark:text-primary-400"
+                className="mt-1 text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
               >
-                Create your first one
+                Create your first one →
               </button>
             </div>
           ) : (
@@ -211,9 +214,16 @@ const ChatRoomPage: React.FC = () => {
                   <p className="text-center text-xs text-slate-500">Loading messages…</p>
                 )}
                 {!loadingMessages && activeMessages.length === 0 && activeStreaming.length === 0 && (
-                  <div className="my-12 text-center text-slate-500">
-                    <Bot className="mx-auto mb-2 text-slate-300" size={32} />
-                    <p className="text-sm">Start the conversation with a message below.</p>
+                  <div className="my-16 flex flex-col items-center text-center">
+                    <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-100 via-purple-100 to-pink-100 shadow-lg dark:from-primary-900/30 dark:via-purple-900/30 dark:to-pink-900/30">
+                      <Bot className="text-primary-500" size={36} />
+                    </div>
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                      Start the conversation
+                    </h3>
+                    <p className="mt-1 max-w-sm text-sm text-slate-500">
+                      Send a message below to begin. Use <kbd className="rounded border border-slate-200 bg-slate-50 px-1 font-mono text-[10px] dark:border-slate-700 dark:bg-slate-800">@</kbd> to mention a specific agent.
+                    </p>
                   </div>
                 )}
 
@@ -336,16 +346,35 @@ const ChatRoomPage: React.FC = () => {
 
 const EmptyChat: React.FC<{ onCreate: () => void }> = ({ onCreate }) => (
   <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-    <MessageSquare size={48} className="mb-3 text-slate-300 dark:text-slate-600" />
-    <h2 className="mb-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
+    <div className="relative mb-6">
+      <div className="absolute inset-0 -m-4 rounded-full bg-gradient-to-br from-primary-400/20 to-purple-400/20 blur-2xl" />
+      <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 text-white shadow-xl shadow-primary-500/30 animate-float">
+        <MessageSquare size={40} strokeWidth={1.8} />
+      </div>
+    </div>
+    <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
       Select a chatroom
     </h2>
-    <p className="mb-4 max-w-sm text-sm text-slate-500">
+    <p className="mt-2 max-w-sm text-sm text-slate-500">
       Pick a chatroom from the left sidebar or create a new one to start chatting with your agents.
     </p>
-    <Button variant="primary" onClick={onCreate} leftIcon={<Plus size={14} />}>
-      New chatroom
-    </Button>
+    <div className="mt-6 flex gap-2">
+      <Button variant="primary" onClick={onCreate} leftIcon={<Plus size={16} />}>
+        New chatroom
+      </Button>
+    </div>
+    <div className="mt-10 grid max-w-md grid-cols-3 gap-3 text-center">
+      {[
+        { emoji: '💬', label: 'Multi-agent chat' },
+        { emoji: '🧠', label: 'Long memory' },
+        { emoji: '⚡', label: 'Custom LLM' },
+      ].map((item) => (
+        <div key={item.label} className="rounded-xl border border-slate-200/60 bg-white/50 p-3 backdrop-blur dark:border-slate-800/60 dark:bg-slate-900/50">
+          <div className="text-2xl">{item.emoji}</div>
+          <p className="mt-1 text-xs font-medium text-slate-700 dark:text-slate-300">{item.label}</p>
+        </div>
+      ))}
+    </div>
   </div>
 );
 

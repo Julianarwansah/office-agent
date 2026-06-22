@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Terminal, AlertTriangle, User } from 'lucide-react';
+import { Terminal, AlertTriangle, User, Bot, Sparkles } from 'lucide-react';
 import type { LLMToolCall, Message } from '../../shared/types';
 import { cn, formatTime, getInitial, renderMarkdown } from '../lib/utils';
 
@@ -25,11 +25,11 @@ function safeParseArgs(raw: string): string {
 const ToolCallBadge: React.FC<{ tc: LLMToolCall }> = ({ tc }) => {
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-xs text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+      className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 px-2 py-0.5 font-mono text-[11px] font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:from-slate-800 dark:to-slate-800/50 dark:text-slate-200"
       title={safeParseArgs(tc.function.arguments)}
     >
-      <Terminal size={11} />
-      <span className="font-mono">{tc.function.name}</span>
+      <Terminal size={10} />
+      <span>{tc.function.name}</span>
     </span>
   );
 };
@@ -49,10 +49,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     [isUser, agentName],
   );
   const avatarBg = isUser
-    ? 'bg-primary-600 text-white'
+    ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-md shadow-primary-500/25'
     : agentColor
-      ? 'text-white'
-      : 'bg-emerald-600 text-white';
+      ? 'text-white shadow-md'
+      : 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25';
   const avatarStyle = !isUser && agentColor ? { backgroundColor: agentColor } : undefined;
 
   const html = useMemo(() => {
@@ -62,9 +62,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   if (isSystem) {
     return (
-      <div className="my-2 flex justify-center">
-        <div className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-          <AlertTriangle size={12} />
+      <div className="my-3 flex justify-center animate-fade-in">
+        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-400">
+          <AlertTriangle size={12} className="text-amber-500" />
           <span>{message.content}</span>
         </div>
       </div>
@@ -74,20 +74,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <div
       className={cn(
-        'flex w-full gap-3',
+        'flex w-full gap-3 animate-fade-in',
         isUser ? 'flex-row-reverse' : 'flex-row',
       )}
     >
       <div
         className={cn(
-          'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold',
+          'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-sm font-semibold',
           avatarBg,
+          !isUser && !agentColor && 'ring-2 ring-white/20',
         )}
         style={avatarStyle}
         title={isUser ? 'You' : agentName ?? 'Agent'}
       >
         {agentAvatar && !isUser ? (
-          <img src={agentAvatar} alt={agentName ?? 'agent'} className="h-full w-full rounded-full object-cover" />
+          <img src={agentAvatar} alt={agentName ?? 'agent'} className="h-full w-full rounded-xl object-cover" />
         ) : isUser ? (
           <User size={16} />
         ) : (
@@ -95,7 +96,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
       </div>
 
-      <div className={cn('flex max-w-[80%] flex-col', isUser ? 'items-end' : 'items-start')}>
+      <div className={cn('flex max-w-[80%] min-w-0 flex-col', isUser ? 'items-end' : 'items-start')}>
         {showHeader && (
           <div
             className={cn(
@@ -103,24 +104,34 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               isUser && 'flex-row-reverse',
             )}
           >
-            <span className="font-medium text-slate-700 dark:text-slate-300">
+            {!isUser && (
+              <Bot size={11} className="text-slate-400" />
+            )}
+            <span className="font-semibold text-slate-700 dark:text-slate-200">
               {isUser ? 'You' : agentName ?? 'Agent'}
             </span>
+            <span>·</span>
             <span>{formatTime(message.createdAt)}</span>
+            {isStreaming && (
+              <span className="flex items-center gap-0.5">
+                <span className="streaming-dot h-1.5 w-1.5 rounded-full bg-primary-500" />
+                <span className="streaming-dot h-1.5 w-1.5 rounded-full bg-primary-500" />
+                <span className="streaming-dot h-1.5 w-1.5 rounded-full bg-primary-500" />
+              </span>
+            )}
           </div>
         )}
 
         <div
           className={cn(
-            'rounded-2xl px-4 py-2.5 shadow-sm',
+            'relative rounded-2xl px-4 py-2.5 shadow-sm transition-shadow',
             isUser
-              ? 'bg-primary-600 text-white'
-              : 'bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100',
-            'border border-slate-200 dark:border-slate-700',
+              ? 'rounded-tr-sm bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-md shadow-primary-500/20'
+              : 'rounded-tl-sm border border-slate-200/60 bg-white text-slate-900 dark:border-slate-700/60 dark:bg-slate-800/80',
           )}
         >
           {message.toolCalls && message.toolCalls.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-1">
+            <div className={cn('mb-2 flex flex-wrap gap-1.5', isUser && 'opacity-95')}>
               {message.toolCalls.map((tc) => (
                 <ToolCallBadge key={tc.id} tc={tc} />
               ))}
@@ -133,11 +144,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               dangerouslySetInnerHTML={{ __html: html }}
             />
           ) : isStreaming ? (
-            <span className="text-sm italic text-slate-400">Thinking…</span>
+            <span className="flex items-center gap-2 text-sm italic text-slate-400 dark:text-slate-500">
+              <Sparkles size={12} className="animate-pulse text-primary-500" />
+              Thinking…
+            </span>
           ) : null}
 
-          {isStreaming && (
-            <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-current align-middle" />
+          {isStreaming && message.content && (
+            <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-current align-middle opacity-70" />
           )}
         </div>
       </div>
