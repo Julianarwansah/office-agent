@@ -1,0 +1,23 @@
+appId: com.officeai.agent
+productName: Office AI Agent
+directories:
+  output: release
+files:
+  - dist-main/**/*
+  - dist-renderer/**/*
+  - package.json
+  - "!**/*.map"
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  artifactName: ${productName}-${version}-${arch}.${ext}
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: ${productName}-${version}-${arch}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist-main/
+dist-renderer/
+release/
+*.log
+.env
+.env.local
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,65 @@
+import { LLMProviderRepository, llmProviders } from './llm-providers';
+import { TeamRepository, teams } from './teams';
+import { AgentRepository, agents } from './agents';
+import { ChatRoomRepository, chatrooms } from './chatrooms';
+import { MessageRepository, messages } from './messages';
+import { MemoryRepository, memories } from './memories';
+import {
+  ConversationSummaryRepository,
+  summaries,
+} from './summaries';
+import { ToolExecutionRepository, toolExecutions } from './tool-executions';
+import { SettingsRepository, settings, DEFAULT_APP_SETTINGS } from './settings';
+import { WorkspaceRepository, workspaces } from './workspaces';
+
+export {
+  LLMProviderRepository,
+  llmProviders,
+  TeamRepository,
+  teams,
+  AgentRepository,
+  agents,
+  ChatRoomRepository,
+  chatrooms,
+  MessageRepository,
+  messages,
+  MemoryRepository,
+  memories,
+  ConversationSummaryRepository,
+  summaries,
+  ToolExecutionRepository,
+  toolExecutions,
+  SettingsRepository,
+  settings,
+  DEFAULT_APP_SETTINGS,
+  WorkspaceRepository,
+  workspaces,
+};
+
+export interface Repositories {
+  llmProviders: LLMProviderRepository;
+  teams: TeamRepository;
+  agents: AgentRepository;
+  chatrooms: ChatRoomRepository;
+  messages: MessageRepository;
+  memories: MemoryRepository;
+  summaries: ConversationSummaryRepository;
+  toolExecutions: ToolExecutionRepository;
+  settings: SettingsRepository;
+  workspaces: WorkspaceRepository;
+}
+
+export function getRepositories(): Repositories {
+  return {
+    llmProviders,
+    teams,
+    agents,
+    chatrooms,
+    messages,
+    memories,
+    summaries,
+    toolExecutions,
+    settings,
+    workspaces,
+  };
+}
