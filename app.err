@@ -1,0 +1,19 @@
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+2026-06-22T08:53:31.058Z [ERROR] [ipc:chat] streamChat failed {"name":"LLMError","message":"Model or endpoint not found for deepseek-v4-flash. Verify baseUrl and model name.","status":0}
+2026-06-22T08:53:45.026Z [ERROR] [ipc:chat] streamChat failed {"name":"LLMError","message":"Model or endpoint not found for deepseek-v4-flash. Verify baseUrl and model name.","status":0}
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+2026-06-22T08:55:30.733Z [ERROR] [ipc:chat] streamChat failed {}
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)

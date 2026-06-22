@@ -263,14 +263,16 @@ async function doDelete(abs: string): Promise<SkillResult> {
   try {
     const stat = await fsp.stat(abs);
     if (stat.isDirectory()) {
-      await fsp.rmdir(abs);
+      // `rmdir` (no recursive) fails on non-empty dirs. Use `rm` so the
+      // caller gets a sensible behaviour for "delete this folder".
+      await fsp.rm(abs, { recursive: true, force: false });
     } else {
       await fsp.unlink(abs);
     }
     return {
       success: true,
       output: `Deleted ${abs}`,
-      data: { path: abs },
+      data: { path: abs, wasDirectory: stat.isDirectory() },
     };
   } catch (e) {
     return {

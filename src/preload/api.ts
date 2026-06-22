@@ -248,6 +248,11 @@ export interface OfficeAPI {
       agentId?: string,
     ): Promise<ApiResponse<boolean>>;
     setAgents(args: { chatRoomId: string; agentIds: string[] }): Promise<ApiResponse<boolean>>;
+    /**
+     * Find an existing 1:1 (direct) chatroom for the given agent, or create a
+     * new one if none exists. Returns the chatroom.
+     */
+    getOrCreateDirect(args: { agentId: string }): Promise<ApiResponse<ChatRoom>>;
   };
 
   /* ----------------------------- Messages ------------------------- */
@@ -291,6 +296,59 @@ export interface OfficeAPI {
      * The structured form `{ agentId }` is also accepted.
      */
     getTools(args: { agentId: string } | Agent): Promise<ApiResponse<LLMTool[]>>;
+    /** Create a new user-defined skill. */
+    create(input: Partial<SkillManifest> & { implementation: string }): Promise<ApiResponse<SkillManifest>>;
+    /** Update an existing user-defined skill by name. */
+    update(name: string, partial: Partial<SkillManifest> & { implementation?: string; enabled?: boolean }): Promise<ApiResponse<SkillManifest | null>>;
+    /** Delete a user-defined skill. */
+    delete(name: string): Promise<ApiResponse<boolean>>;
+    /** Dry-run a user-defined skill's implementation outside the orchestrator. */
+    test(args: {
+      name?: string;
+      manifest?: Partial<SkillManifest>;
+      implementation?: string;
+      testArgs?: Record<string, unknown>;
+      workingDirectory?: string;
+    }): Promise<ApiResponse<{
+      success: boolean;
+      output: string;
+      error?: string;
+      durationMs: number;
+    }>>;
+    /** List all persisted user-defined skills (includes implementation). */
+    listUser(): Promise<ApiResponse<Array<{
+      name: string;
+      displayName: string;
+      description: string;
+      category: string;
+      version: string;
+      author?: string;
+      parameters: SkillManifest['parameters'];
+      requiresApproval: boolean;
+      dangerous: boolean;
+      examples?: SkillManifest['examples'];
+      implementation: string;
+      enabled: boolean;
+      createdAt: number;
+      updatedAt: number;
+    }>>>;
+    /** Fetch a single persisted user-defined skill by name. */
+    getUser(name: string): Promise<ApiResponse<{
+      name: string;
+      displayName: string;
+      description: string;
+      category: string;
+      version: string;
+      author?: string;
+      parameters: SkillManifest['parameters'];
+      requiresApproval: boolean;
+      dangerous: boolean;
+      examples?: SkillManifest['examples'];
+      implementation: string;
+      enabled: boolean;
+      createdAt: number;
+      updatedAt: number;
+    } | null>>;
   };
 
   /* ----------------------------- Terminal ------------------------- */

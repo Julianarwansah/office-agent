@@ -25,9 +25,19 @@ interface LLMState {
   updateProvider: (id: string, data: Partial<LLMSettingsData>) => Promise<LLMProvider | null>;
   deleteProvider: (id: string) => Promise<void>;
   setDefault: (id: string) => Promise<void>;
-  testProvider: (id: string) => Promise<{ ok: boolean; message: string }>;
+  testProvider: (id: string) => Promise<TestResult>;
+  testProviderInline: (data: Partial<LLMProvider>) => Promise<TestResult>;
   loadModels: (providerId: string) => Promise<string[]>;
+  loadModelsInline: (data: { baseUrl?: string; apiKey?: string }) => Promise<string[]>;
   clearError: () => void;
+}
+
+export interface TestResult {
+  ok: boolean;
+  success?: boolean;
+  message: string;
+  latencyMs?: number;
+  testedAt?: number;
 }
 
 export const useLLMStore = create<LLMState>((set, get) => ({
@@ -88,16 +98,48 @@ export const useLLMStore = create<LLMState>((set, get) => ({
     set({ testing: true });
     try {
       const result = unwrap(await api.llm.test(id));
+      const r = result as { success?: boolean; message?: string; latencyMs?: number };
+      const ok = !!(r && (r.success ?? true) !== false);
       set({ testing: false });
       return {
-        ok: !!(result && (result as { ok?: boolean }).ok !== false),
-        message: (result as { message?: string })?.message ?? 'Connection successful',
+        ok,
+        success: ok,
+        message: r?.message ?? (ok ? 'Connection successful' : 'Connection failed'),
+        latencyMs: r?.latencyMs,
+        testedAt: Date.now(),
       };
     } catch (err) {
       set({ testing: false });
       return {
         ok: false,
+        success: false,
         message: err instanceof Error ? err.message : 'Test failed',
+        testedAt: Date.now(),
+      };
+    }
+  },
+
+  testProviderInline: async (data) => {
+    set({ testing: true });
+    try {
+      const result = unwrap(await api.llm.test({ provider: data }));
+      const r = result as { success?: boolean; message?: string; latencyMs?: number };
+      const ok = !!(r && (r.success ?? true) !== false);
+      set({ testing: false });
+      return {
+        ok,
+        success: ok,
+        message: r?.message ?? (ok ? 'Connection successful' : 'Connection failed'),
+        latencyMs: r?.latencyMs,
+        testedAt: Date.now(),
+      };
+    } catch (err) {
+      set({ testing: false });
+      return {
+        ok: false,
+        success: false,
+        message: err instanceof Error ? err.message : 'Test failed',
+        testedAt: Date.now(),
       };
     }
   },
@@ -110,6 +152,16 @@ export const useLLMStore = create<LLMState>((set, get) => ({
       return list;
     } catch (err) {
       console.error('Failed to load models for provider:', providerId, err);
+      return [];
+    }
+  },
+
+  loadModelsInline: async (data) => {
+    try {
+      const result = unwrap(await api.llm.listModels(data));
+      return Array.isArray(result) ? result : [];
+    } catch (err) {
+      console.error('Failed to load models inline:', err);
       return [];
     }
   },

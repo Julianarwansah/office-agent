@@ -205,6 +205,9 @@ const officeAPI: OfficeAPI = {
     setAgents(args) {
       return invoke<boolean>(IPC_CHANNELS.CHATROOM.SET_AGENTS, args);
     },
+    getOrCreateDirect(args) {
+      return invoke<ChatRoom>(IPC_CHANNELS.CHATROOM.GET_OR_CREATE_DIRECT, args);
+    },
   },
 
   /* ----------------------------- Messages ------------------------- */
@@ -288,6 +291,29 @@ const officeAPI: OfficeAPI = {
       return invoke<unknown[]>(IPC_CHANNELS.SKILL.GET_TOOLS, {
         agentId: getAgentId(args),
       }) as Promise<ApiResponse<never[]>>;
+    },
+    create(input) {
+      return invoke<unknown>(IPC_CHANNELS.SKILL.CREATE, input) as Promise<ApiResponse<never>>;
+    },
+    update(name, partial) {
+      return invoke<unknown>(IPC_CHANNELS.SKILL.UPDATE, name, partial) as Promise<ApiResponse<never>>;
+    },
+    delete(name) {
+      return invoke<boolean>(IPC_CHANNELS.SKILL.DELETE, name);
+    },
+    test(args) {
+      return invoke<{
+        success: boolean;
+        output: string;
+        error?: string;
+        durationMs: number;
+      }>(IPC_CHANNELS.SKILL.TEST, args);
+    },
+    listUser() {
+      return invoke<unknown[]>(IPC_CHANNELS.SKILL.LIST_USER) as Promise<ApiResponse<never[]>>;
+    },
+    getUser(name) {
+      return invoke<unknown>(IPC_CHANNELS.SKILL.GET_USER, name) as Promise<ApiResponse<never>>;
     },
   },
 

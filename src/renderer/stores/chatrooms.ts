@@ -21,6 +21,7 @@ interface ChatRoomsState {
   deleteChatRoom: (id: string) => Promise<void>;
   addAgentToChatRoom: (chatRoomId: string, agentId: string) => Promise<void>;
   removeAgentFromChatRoom: (chatRoomId: string, agentId: string) => Promise<void>;
+  getOrCreateDirect: (agentId: string) => Promise<ChatRoom>;
 
   loadMessages: (chatRoomId: string) => Promise<void>;
   appendMessage: (chatRoomId: string, msg: Message | null) => void;
@@ -90,6 +91,12 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
   removeAgentFromChatRoom: async (chatRoomId, agentId) => {
     unwrap(await api.chatrooms.removeAgent(chatRoomId, agentId));
     await get().loadChatrooms();
+  },
+
+  getOrCreateDirect: async (agentId) => {
+    const chatroom = unwrap(await api.chatrooms.getOrCreateDirect({ agentId }));
+    await get().loadChatrooms();
+    return chatroom;
   },
 
   loadMessages: async (chatRoomId) => {

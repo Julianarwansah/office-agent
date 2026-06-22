@@ -11,6 +11,7 @@ import {
 import { ToolExecutionRepository, toolExecutions } from './tool-executions';
 import { SettingsRepository, settings, DEFAULT_APP_SETTINGS } from './settings';
 import { WorkspaceRepository, workspaces } from './workspaces';
+import { UserSkillRepository, userSkills } from './user-skills';
 
 export {
   LLMProviderRepository,
@@ -34,6 +35,8 @@ export {
   DEFAULT_APP_SETTINGS,
   WorkspaceRepository,
   workspaces,
+  UserSkillRepository,
+  userSkills,
 };
 
 export interface Repositories {
@@ -47,9 +50,13 @@ export interface Repositories {
   toolExecutions: ToolExecutionRepository;
   settings: SettingsRepository;
   workspaces: WorkspaceRepository;
+  userSkills: UserSkillRepository;
 }
 
 export function getRepositories(): Repositories {
+  // Late-bind the agents repository onto the chatrooms repository so that
+  // `type === 'global'` chatrooms can resolve their dynamic membership.
+  chatrooms.setAgentsRepository(agents);
   return {
     llmProviders,
     teams,
@@ -61,5 +68,6 @@ export function getRepositories(): Repositories {
     toolExecutions,
     settings,
     workspaces,
+    userSkills,
   };
 }

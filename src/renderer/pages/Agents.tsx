@@ -1,10 +1,15 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, Bot, Trash2, Edit, Wand2, Users } from 'lucide-react';
+import { Plus, Bot, Trash2, Edit, Wand2, Users, Sparkles, AlertCircle } from 'lucide-react';
 import { useAgentsStore } from '../stores/agents';
 import AgentEditor from '../components/AgentEditor';
+import AgentTemplatePicker from '../components/AgentTemplatePicker';
+import Modal from '../components/ui/Modal';
+import Button from '../components/ui/Button';
 import type { Agent } from '../../shared/types';
+import type { AgentTemplate } from '../../shared/agent-templates';
 import { cn, getInitial } from '../lib/utils';
 import type { AgentFormData } from '../lib/types';
+import { incrementTemplateUsage } from '../lib/template-usage';
 
 const AgentsPage: React.FC = () => {
   const agents = useAgentsStore((s) => s.agents);
@@ -16,6 +21,12 @@ const AgentsPage: React.FC = () => {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Agent | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pendingTemplate, setPendingTemplate] = useState<AgentTemplate | null>(null);
+  const [pendingCreate, setPendingCreate] = useState<
+    { data: AgentFormData; templateId: string | null } | null
+  >(null);
+  const [confirming, setConfirming] = useState(false);
 
   const teamsById = useMemo(() => {
     const m = new Map<string, (typeof teams)[number]>();
@@ -24,21 +35,57 @@ const AgentsPage: React.FC = () => {
   }, [teams]);
 
   function openNew() {
+    setPickerOpen(true);
+  }
+
+  function openNewBlank() {
     setEditing(null);
+    setPendingTemplate(null);
+    setEditorOpen(true);
+  }
+
+  function handleTemplatePicked(template: AgentTemplate | null) {
+    setPickerOpen(false);
+    setEditing(null);
+    setPendingTemplate(template);
     setEditorOpen(true);
   }
 
   function openEdit(agent: Agent) {
     setEditing(agent);
+    setPendingTemplate(null);
     setEditorOpen(true);
   }
 
   async function handleSave(data: AgentFormData) {
     if (data.id) {
       await updateAgent(data.id, data);
-    } else {
-      await createAgent(data);
+      return;
     }
+    setPendingCreate({ data, templateId: pendingTemplate?.id ?? null });
+    setConfirming(true);
+  }
+
+  async function confirmCreate() {
+    if (!pendingCreate) return;
+    const { data, templateId } = pendingCreate;
+    setConfirming(false);
+    setPendingCreate(null);
+    try {
+      await createAgent(data);
+      if (templateId) {
+        incrementTemplateUsage(templateId);
+      }
+      setEditorOpen(false);
+      setPendingTemplate(null);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to create agent.');
+    }
+  }
+
+  function cancelCreate() {
+    setConfirming(false);
+    setPendingCreate(null);
   }
 
   async function handleDelete(agent: Agent) {
@@ -55,10 +102,12 @@ const AgentsPage: React.FC = () => {
             Define AI personas with skills and roles.
           </p>
         </div>
-        <button onClick={openNew} className="btn-primary">
-          <Plus size={16} />
-          New Agent
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={openNew} className="btn-primary">
+            <Sparkles size={16} />
+            New Agent
+          </button>
+        </div>
       </div>
 
       {loadingAgents ? (
@@ -77,12 +126,19 @@ const AgentsPage: React.FC = () => {
             </div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No agents yet</h2>
             <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
-              Agents are AI personas with skills and roles. Add an LLM provider in Settings, then create your first agent.
+              Agents are AI personas with skills and roles. Pick a template to get started quickly,
+              or build one from scratch.
             </p>
-            <button onClick={openNew} className="btn-primary mt-5">
-              <Plus size={16} />
-              Create your first agent
-            </button>
+            <div className="mt-5 flex items-center justify-center gap-2">
+              <button onClick={openNew} className="btn-primary">
+                <Sparkles size={16} />
+                Choose a template
+              </button>
+              <button onClick={openNewBlank} className="btn-secondary">
+                <Plus size={16} />
+                Start from blank
+              </button>
+            </div>
           </div>
         </div>
       ) : (
@@ -99,12 +155,95 @@ const AgentsPage: React.FC = () => {
         </div>
       )}
 
+      <AgentTemplatePicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={handleTemplatePicked}
+      />
+
       <AgentEditor
         agent={editing}
         open={editorOpen}
-        onClose={() => setEditorOpen(false)}
+        onClose={() => {
+          setEditorOpen(false);
+          setPendingTemplate(null);
+        }}
         onSave={handleSave}
+        initialTemplate={pendingTemplate}
+        onChangeTemplate={() => {
+          setEditorOpen(false);
+          setPendingTemplate(null);
+          setPickerOpen(true);
+        }}
       />
+
+      <Modal
+        open={confirming}
+        onClose={cancelCreate}
+        title={
+          <div className="flex items-center gap-2">
+            <AlertCircle size={16} className="text-amber-500" />
+            <span>Add this agent?</span>
+          </div>
+        }
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={cancelCreate} size="md">
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => void confirmCreate()}
+              leftIcon={<Sparkles size={14} />}
+            >
+              Yes, add agent
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+          <p>
+            You are about to add a new agent
+            {pendingTemplate ? (
+              <>
+                {' '}based on the template{' '}
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  {pendingTemplate.emoji} {pendingTemplate.name}
+                </span>
+              </>
+            ) : (
+              ' built from scratch'
+            )}
+            .
+          </p>
+          {pendingCreate && (
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs dark:border-slate-700 dark:bg-slate-800/50">
+              <div className="mb-1">
+                <span className="text-slate-500">Name:</span>{' '}
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {pendingCreate.data.name || '(unnamed)'}
+                </span>
+              </div>
+              <div className="mb-1">
+                <span className="text-slate-500">Role:</span>{' '}
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {pendingCreate.data.isLead ? 'Lead' : pendingCreate.data.role}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500">Skills:</span>{' '}
+                <span className="font-medium text-slate-900 dark:text-slate-100">
+                  {pendingCreate.data.enabledSkills?.length ?? 0} enabled
+                </span>
+              </div>
+            </div>
+          )}
+          <p className="text-xs text-slate-500">
+            The agent will be saved to your local database. You can edit or delete it later.
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 };

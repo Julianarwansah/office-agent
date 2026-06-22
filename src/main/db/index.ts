@@ -142,6 +142,24 @@ CREATE TABLE IF NOT EXISTS workspaces (
   is_default INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS user_skills (
+  name TEXT PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  category TEXT NOT NULL DEFAULT 'productivity',
+  version TEXT NOT NULL DEFAULT '1.0.0',
+  author TEXT,
+  parameters TEXT NOT NULL DEFAULT '[]',
+  requires_approval INTEGER NOT NULL DEFAULT 0,
+  dangerous INTEGER NOT NULL DEFAULT 0,
+  implementation TEXT NOT NULL DEFAULT '',
+  enabled INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_skills_enabled ON user_skills(enabled);
 `;
 
 interface PreparedEntry {
@@ -216,6 +234,27 @@ class DatabaseManager {
         name: '002_agent_team_index',
         up: `
           CREATE INDEX IF NOT EXISTS idx_agents_team ON agents(team_id);
+        `,
+      },
+      {
+        name: '003_user_skills',
+        up: `
+          CREATE TABLE IF NOT EXISTS user_skills (
+            name TEXT PRIMARY KEY,
+            display_name TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            category TEXT NOT NULL DEFAULT 'productivity',
+            version TEXT NOT NULL DEFAULT '1.0.0',
+            author TEXT,
+            parameters TEXT NOT NULL DEFAULT '[]',
+            requires_approval INTEGER NOT NULL DEFAULT 0,
+            dangerous INTEGER NOT NULL DEFAULT 0,
+            implementation TEXT NOT NULL DEFAULT '',
+            enabled INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+          );
+          CREATE INDEX IF NOT EXISTS idx_user_skills_enabled ON user_skills(enabled);
         `,
       },
     ];

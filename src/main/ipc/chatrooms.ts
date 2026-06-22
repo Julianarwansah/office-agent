@@ -5,7 +5,7 @@
 import { ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../../shared/types';
 import type { ApiResponse, ChatRoom, ChatRoomType } from '../../shared/types';
-import type { ChatRoomRepository } from '../db/repositories';
+import type { ChatRoomRepository, AgentRepository } from '../db/repositories';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('ipc:chatrooms');
@@ -15,6 +15,7 @@ function fail<T = never>(error: string): ApiResponse<T> { return { success: fals
 
 export interface ChatRoomHandlerDeps {
   chatrooms: ChatRoomRepository;
+  agents?: AgentRepository;
 }
 
 export function registerChatRoomHandlers(deps: ChatRoomHandlerDeps): void {
@@ -107,6 +108,39 @@ export function registerChatRoomHandlers(deps: ChatRoomHandlerDeps): void {
       return ok(true);
     } catch (err) {
       return failErr('CHATROOM.SET_AGENTS', err);
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.CHATROOM.GET_OR_CREATE_DIRECT, async (
+    _evt,
+    args: { agentId: string },
+  ): Promise<ApiResponse<ChatRoom>> => {
+    try {
+      if (!args?.agentId || typeof args.agentId !== 'string') {
+        return fail('agentId is required');
+      }
+      const agentId = String(args.agentId);
+
+      if (!deps.agents) {
+        return fail('AgentRepository is not available to resolve agent for direct chatroom');
+      }
+      const agent = deps.agents.findById(agentId);
+      if (!agent) return fail(`Agent not found: ${agentId}`);
+
+      const existing = repo
+        .findAll()
+        .find((c) => c.type === 'direct' && c.agentIds.length === 1 && c.agentIds[0] === agentId);
+      if (existing) return ok(existing);
+
+      const created = repo.create({
+        name: agent.name,
+        description: `Direct chat with ${agent.name}`,
+        type: 'direct',
+        agentIds: [agentId],
+      });
+      return ok(created);
+    } catch (err) {
+      return failErr('CHATROOM.GET_OR_CREATE_DIRECT', err);
     }
   });
 }

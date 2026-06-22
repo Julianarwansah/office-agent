@@ -176,6 +176,27 @@ CREATE TABLE IF NOT EXISTS workspaces (
 
 CREATE INDEX IF NOT EXISTS idx_workspaces_default ON workspaces(is_default);
 
+-- User-defined skills (CRUD). Each row is a SkillManifest JSON blob plus a
+-- JavaScript implementation body. User skills are loaded at boot and
+-- registered alongside builtin skills in the SkillRegistry.
+CREATE TABLE IF NOT EXISTS user_skills (
+  name TEXT PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  category TEXT NOT NULL DEFAULT 'productivity',
+  version TEXT NOT NULL DEFAULT '1.0.0',
+  author TEXT,
+  parameters TEXT NOT NULL DEFAULT '[]',
+  requires_approval INTEGER NOT NULL DEFAULT 0,
+  dangerous INTEGER NOT NULL DEFAULT 0,
+  implementation TEXT NOT NULL DEFAULT '',
+  enabled INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_skills_enabled ON user_skills(enabled);
+
 -- Only one default LLM provider at a time
 CREATE TRIGGER IF NOT EXISTS trg_llm_providers_single_default
 BEFORE UPDATE OF is_default ON llm_providers

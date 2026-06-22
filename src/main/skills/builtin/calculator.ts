@@ -178,12 +178,13 @@ function toRPN(tokens: Token[]): Token[] {
     if (t.kind === 'num' || t.kind === 'ident') {
       output.push(t);
     } else if (t.kind === 'op') {
+      // A `-` is unary when it appears at the start of an expression or
+      // after another operator / opening paren. (We intentionally do not
+      // treat `-` after an identifier as unary, so `pow(2, -3)` style
+      // expressions are not supported — this keeps the parser simple.)
       const isUnary =
         t.value === '-' &&
-        (prev === null ||
-          (prev.kind === 'op') ||
-          prev.kind === 'lparen' ||
-          (prev.kind === 'ident' && false));
+        (prev === null || prev.kind === 'op' || prev.kind === 'lparen');
       const opKey = isUnary ? 'u-' : t.value;
       while (stack.length) {
         const top = stack[stack.length - 1];

@@ -33,8 +33,11 @@ const Dashboard: React.FC = () => {
   const defaultProvider = useLLMStore((s) => s.defaultProvider);
   const localhostUrl = useAppStore((s) => s.localhostUrl);
   const appSettings = useAppStore((s) => s.appSettings);
+  const testProvider = useLLMStore((s) => s.testProvider);
 
   const [totals, setTotals] = useState<{ messages: number; memories: number }>({ messages: 0, memories: 0 });
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<Record<string, { ok: boolean; message: string; latencyMs?: number }>>({});
 
   useEffect(() => {
     let msgCount = 0;

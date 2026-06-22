@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Save, Plus, Trash2, Star, TestTube2, Loader2, Check, X } from 'lucide-react';
-import { useLLMStore } from '../stores/llm';
+﻿import React, { useEffect, useState } from 'react';
+import { Save, Plus, Trash2, Star, TestTube2, Loader2, Check, X, RotateCw, Zap, Activity, Network } from 'lucide-react';
+import { useLLMStore, type TestResult } from '../stores/llm';
 import { useAppStore } from '../stores/app';
 import { useAgentsStore } from '../stores/agents';
 import { useWorkspaceStore } from '../stores/workspace';
+import TestConnectionButton, { TestResultDisplay, TestConnectionStatus } from '../components/TestConnectionButton';
+import LLMProviderEditor from '../components/LLMProviderEditor';
 import { cn } from '../lib/utils';
 import type { AppSettings, LLMProvider } from '../../shared/types';
 import type { LLMSettingsData } from '../lib/types';
@@ -158,7 +160,9 @@ const LLMTab: React.FC = () => {
   } = useLLMStore();
   const [editing, setEditing] = useState<LLMSettingsData | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
-  const [testResult, setTestResult] = useState<Record<string, { ok: boolean; message: string }>>({});
+  const [testResults, setTestResults] = useState<Record<string, TestResult>>({});
+  const [batchTesting, setBatchTesting] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ done: 0, total: 0 });
 
   useEffect(() => {
     if (presets.length === 0) void loadPresets();
@@ -167,8 +171,25 @@ const LLMTab: React.FC = () => {
   const handleTest = async (id: string) => {
     setTestingId(id);
     const result = await testProvider(id);
-    setTestResult((prev) => ({ ...prev, [id]: result }));
+    setTestResults((prev) => ({ ...prev, [id]: result }));
     setTestingId(null);
+    return result;
+  };
+
+  const handleTestAll = async () => {
+    if (providers.length === 0) return;
+    setBatchTesting(true);
+    setBatchProgress({ done: 0, total: providers.length });
+    for (let i = 0; i < providers.length; i++) {
+      const p = providers[i];
+      setBatchProgress({ done: i, total: providers.length });
+      setTestingId(p.id);
+      const result = await testProvider(p.id);
+      setTestResults((prev) => ({ ...prev, [p.id]: result }));
+    }
+    setBatchProgress({ done: providers.length, total: providers.length });
+    setTestingId(null);
+    setBatchTesting(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -176,33 +197,52 @@ const LLMTab: React.FC = () => {
     await deleteProvider(id);
   };
 
+  const successCount = Object.values(testResults).filter((r) => r.ok).length;
+  const failureCount = Object.values(testResults).filter((r) => !r.ok).length;
+  const testedCount = successCount + failureCount;
+  const allHealthy = providers.length > 0 && testedCount === providers.length && failureCount === 0;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">LLM Providers</h2>
-        <button
-          className="btn-primary"
-          onClick={() =>
-            setEditing({
-              name: '',
-              baseUrl: 'https://api.openai.com/v1',
-              model: 'gpt-4o-mini',
-              temperature: 0.7,
-              maxTokens: 4096,
-              topP: 1,
-            })
-          }
-        >
-          <Plus size={16} />
-          Add provider
-        </button>
-      </div>
-
-      {loading && <p className="text-sm text-slate-500">Loading providers…</p>}
-
-      {!loading && providers.length === 0 && (
-        <div className="card flex flex-col items-center justify-center gap-3 p-10 text-center">
-          <p className="text-sm text-slate-500">No providers configured yet.</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">LLM Providers</h2>
+          {providers.length > 0 && (
+            <p className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
+              {testedCount > 0 && (
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium',
+                    allHealthy
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                      : failureCount > 0
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                        : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                  )}
+                >
+                  {allHealthy ? <Check size={10} /> : <X size={10} />}
+                  {successCount}/{providers.length} healthy
+                </span>
+              )}
+              {batchTesting && (
+                <span className="text-slate-500">
+                  Testing {batchProgress.done + 1}/{batchProgress.total}â€¦
+                </span>
+              )}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {providers.length > 0 && (
+            <button
+              onClick={handleTestAll}
+              disabled={batchTesting}
+              className="btn-secondary"
+            >
+              {batchTesting ? <Loader2 size={14} className="animate-spin" /> : <Network size={14} />}
+              Test all
+            </button>
+          )}
           <button
             className="btn-primary"
             onClick={() =>
@@ -213,9 +253,43 @@ const LLMTab: React.FC = () => {
               })
             }
           >
-            <Plus size={16} />
-            Add your first provider
+            <Plus size={14} />
+            Add Provider
           </button>
+        </div>
+      </div>
+
+      {loading && (
+        <div className="card p-8 text-center">
+          <Loader2 className="mx-auto mb-2 animate-spin text-slate-400" size={20} />
+          <p className="text-sm text-slate-500">Loading providersâ€¦</p>
+        </div>
+      )}
+
+      {!loading && providers.length === 0 && (
+        <div className="card relative overflow-hidden p-12 text-center">
+          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gradient-to-br from-primary-400/20 to-purple-400/20 blur-3xl" />
+          <div className="relative">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-primary-500/30">
+              <Network size={36} />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No LLM providers yet</h3>
+            <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
+              Connect an OpenAI-compatible endpoint (OpenAI, Ollama, LM Studio, OpenRouter, Groq, Togetherâ€¦) to start chatting with your agents.
+            </p>
+            <button
+              className="btn-primary mt-5"
+              onClick={() =>
+                setEditing({
+                  name: '',
+                  baseUrl: 'https://api.openai.com/v1',
+                  model: 'gpt-4o-mini',
+                })
+              }
+            >
+              <Plus size={16} /> Add your first provider
+            </button>
+          </div>
         </div>
       )}
 
@@ -230,24 +304,29 @@ const LLMTab: React.FC = () => {
             onSetDefault={() => setDefault(p.id)}
             onTest={() => handleTest(p.id)}
             testing={testingId === p.id}
-            testResult={testResult[p.id]}
+            testResult={testResults[p.id]}
+            onClearResult={() => setTestResults((prev) => { const n = { ...prev }; delete n[p.id]; return n; })}
           />
         ))}
       </div>
 
       {editing && (
-        <ProviderEditor
-          draft={editing}
+        <LLMProviderEditor
+          provider={providers.find((p) => p.id === editing.id) ?? null}
+          open={!!editing}
           presets={presets}
-          isEdit={providers.some((p) => p.id === editing.id)}
-          onCancel={() => setEditing(null)}
-          onSubmit={async (data) => {
-            if (data.id) {
-              await updateProvider(data.id, data);
+          onClose={() => setEditing(null)}
+          onSave={async (data) => {
+            if (editing.id) {
+              await updateProvider(editing.id, data);
             } else {
               await createProvider(data);
             }
             setEditing(null);
+          }}
+          onTest={async (id) => {
+            const r = await testProvider(id);
+            return { ok: r.ok, message: r.message, latencyMs: r.latencyMs };
           }}
         />
       )}
@@ -275,11 +354,12 @@ interface ProviderCardProps {
   provider: LLMProvider;
   isDefault: boolean;
   testing: boolean;
-  testResult?: { ok: boolean; message: string };
+  testResult?: TestResult;
   onEdit: () => void;
   onDelete: () => void;
   onSetDefault: () => void;
-  onTest: () => void;
+  onTest: () => Promise<{ ok: boolean; message: string; latencyMs?: number }>;
+  onClearResult?: () => void;
 }
 
 const ProviderCard: React.FC<ProviderCardProps> = ({
@@ -291,232 +371,104 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   onDelete,
   onSetDefault,
   onTest,
+  onClearResult,
 }) => {
+  const isHealthy = testResult?.ok === true;
+  const isFailing = testResult?.ok === false;
+
   return (
-    <div className="card p-4">
+    <div
+      className={cn(
+        'card relative overflow-hidden p-4 transition-all',
+        isHealthy && 'ring-1 ring-emerald-200 dark:ring-emerald-800/60',
+        isFailing && 'ring-1 ring-red-200 dark:ring-red-800/60',
+      )}
+    >
+      {isHealthy && (
+        <div className="absolute right-0 top-0 h-1 w-full bg-gradient-to-r from-emerald-400 to-emerald-500" />
+      )}
+      {isFailing && (
+        <div className="absolute right-0 top-0 h-1 w-full bg-gradient-to-r from-red-400 to-red-500" />
+      )}
+
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="truncate font-medium text-slate-900 dark:text-slate-100">{provider.name}</h3>
-            {isDefault && (
-              <span className="badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                Default
-              </span>
-            )}
+            <div
+              className={cn(
+                'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-white shadow-sm',
+                isHealthy
+                  ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
+                  : isFailing
+                    ? 'bg-gradient-to-br from-red-500 to-red-600'
+                    : 'bg-gradient-to-br from-primary-500 to-primary-600',
+              )}
+            >
+              <Network size={14} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <h3 className="truncate font-medium text-slate-900 dark:text-slate-100">{provider.name}</h3>
+                {isDefault && (
+                  <span className="badge-warning !text-[10px]">
+                    <Star size={9} /> Default
+                  </span>
+                )}
+                {isHealthy && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    <Check size={9} /> Online
+                  </span>
+                )}
+                {isFailing && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                    <X size={9} /> Error
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 truncate font-mono text-[11px] text-slate-500">{provider.baseUrl}</p>
+              <p className="mt-0.5 truncate text-xs text-slate-600 dark:text-slate-400">
+                Model: <span className="font-mono">{provider.model}</span>
+              </p>
+            </div>
           </div>
-          <p className="mt-1 truncate font-mono text-xs text-slate-500">{provider.baseUrl}</p>
-          <p className="mt-1 truncate text-xs text-slate-600 dark:text-slate-400">
-            Model: <span className="font-mono">{provider.model}</span>
-          </p>
         </div>
       </div>
 
       {testResult && (
-        <div
-          className={cn(
-            'mt-3 flex items-center gap-2 rounded p-2 text-xs',
-            testResult.ok
-              ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'
-              : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300',
-          )}
-        >
-          {testResult.ok ? <Check size={14} /> : <X size={14} />}
-          <span className="truncate">{testResult.message}</span>
+        <div className="mt-3">
+          <TestResultDisplay
+            result={testResult}
+            compact
+            onClear={onClearResult}
+            onRetry={onTest}
+          />
         </div>
       )}
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button onClick={onEdit} className="btn-secondary text-xs">
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        <button onClick={onEdit} className="btn-secondary !text-xs !py-1.5">
           Edit
         </button>
-        <button
-          onClick={onTest}
+        <TestConnectionButton
+          onTest={onTest}
+          size="sm"
+          variant="secondary"
+          inline={false}
+          showLastResult={false}
           disabled={testing}
-          className="btn-secondary text-xs"
-        >
-          {testing ? <Loader2 size={12} className="animate-spin" /> : <TestTube2 size={12} />}
-          Test
-        </button>
+          label="Test"
+        />
         {!isDefault && (
-          <button onClick={onSetDefault} className="btn-secondary text-xs">
-            <Star size={12} />
+          <button onClick={onSetDefault} className="btn-secondary !text-xs !py-1.5">
+            <Star size={11} />
             Set default
           </button>
         )}
-        <button onClick={onDelete} className="btn-ghost text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
-          <Trash2 size={12} />
+        <button onClick={onDelete} className="btn-ghost !text-xs !py-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 ml-auto">
+          <Trash2 size={11} />
           Delete
         </button>
       </div>
-    </div>
-  );
-};
-
-interface ProviderEditorProps {
-  draft: LLMSettingsData;
-  presets: Array<{ id: string; name: string; baseUrl: string; model: string }>;
-  isEdit: boolean;
-  onCancel: () => void;
-  onSubmit: (data: LLMSettingsData) => Promise<void>;
-}
-
-const ProviderEditor: React.FC<ProviderEditorProps> = ({ draft, presets, isEdit, onCancel, onSubmit }) => {
-  const [form, setForm] = useState<LLMSettingsData>(draft);
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => setForm(draft), [draft]);
-
-  const handlePreset = (presetId: string) => {
-    const preset = presets.find((p) => p.id === presetId);
-    if (!preset) return;
-    setForm((f) => ({
-      ...f,
-      baseUrl: preset.baseUrl,
-      model: preset.model,
-      name: f.name || preset.name,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await onSubmit(form);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="card w-full max-w-xl space-y-4 p-6"
-      >
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          {isEdit ? 'Edit' : 'New'} LLM provider
-        </h3>
-
-        {presets.length > 0 && !isEdit && (
-          <div>
-            <label className="mb-1 block text-sm font-medium">Start from preset</label>
-            <select className="input" defaultValue="" onChange={(e) => handlePreset(e.target.value)}>
-              <option value="">— Select preset —</option>
-              {presets.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Name</label>
-            <input
-              className="input"
-              required
-              value={form.name ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Model</label>
-            <input
-              className="input"
-              required
-              value={form.model ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">Base URL</label>
-          <input
-            className="input font-mono text-xs"
-            required
-            value={form.baseUrl ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, baseUrl: e.target.value }))}
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">API key</label>
-          <input
-            type="password"
-            className="input font-mono text-xs"
-            placeholder={isEdit ? '•••••••• (leave empty to keep)' : ''}
-            value={form.apiKey ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, apiKey: e.target.value }))}
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Temperature</label>
-            <input
-              type="number"
-              step="0.05"
-              min="0"
-              max="2"
-              className="input"
-              value={form.temperature ?? 0.7}
-              onChange={(e) => setForm((f) => ({ ...f, temperature: Number(e.target.value) }))}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Max tokens</label>
-            <input
-              type="number"
-              className="input"
-              value={form.maxTokens ?? 4096}
-              onChange={(e) => setForm((f) => ({ ...f, maxTokens: Number(e.target.value) }))}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Top P</label>
-            <input
-              type="number"
-              step="0.05"
-              min="0"
-              max="1"
-              className="input"
-              value={form.topP ?? 1}
-              onChange={(e) => setForm((f) => ({ ...f, topP: Number(e.target.value) }))}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">System prompt prefix (optional)</label>
-          <textarea
-            className="input min-h-[60px] resize-y"
-            value={form.systemPromptPrefix ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, systemPromptPrefix: e.target.value }))}
-          />
-        </div>
-
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={!!form.isDefault}
-            onChange={(e) => setForm((f) => ({ ...f, isDefault: e.target.checked }))}
-          />
-          Use as default provider
-        </label>
-
-        <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onCancel} className="btn-secondary">
-            Cancel
-          </button>
-          <button type="submit" disabled={submitting} className="btn-primary">
-            {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            Save
-          </button>
-        </div>
-      </form>
     </div>
   );
 };
@@ -529,7 +481,7 @@ const WorkspaceTab: React.FC = () => {
       <p className="mb-4 text-sm text-slate-500">
         Manage your project workspaces. Files inside a workspace can be browsed and read by agents.
       </p>
-      {loading && <p className="text-sm text-slate-500">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loadingâ€¦</p>}
       {!loading && workspaces.length === 0 && (
         <p className="text-sm text-slate-500">No workspaces configured. Visit the Workspace page to add one.</p>
       )}
@@ -587,7 +539,7 @@ const AdvancedTab: React.FC = () => {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">Importance threshold (0–1)</label>
+            <label className="mb-1 block text-sm font-medium">Importance threshold (0â€“1)</label>
             <input
               type="number"
               step="0.05"

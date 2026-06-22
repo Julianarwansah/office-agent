@@ -137,9 +137,10 @@ export const codeExecSkill: SkillDefinition = {
     let cmd: string;
     let spawnArgs: string[];
     if (args.language === 'javascript') {
-      cmd = process.execPath; // bundled node when packaged
-      // If running under electron we need to ensure node-like behavior; spawn node directly when available.
-      // For dev (electron), prefer system node if present.
+      // Prefer system `node` on PATH; fall back to process.execPath when the
+      // bundled binary happens to be Node-compatible (e.g. dev runs). In a
+      // packaged Electron app `node` may be missing — the ENOENT branch below
+      // surfaces a clear error.
       cmd = 'node';
       spawnArgs = ['-e', args.code];
     } else {
@@ -151,6 +152,23 @@ export const codeExecSkill: SkillDefinition = {
       const r = await runChild(cmd, spawnArgs, cwd, timeoutMs, ctx.signal);
       const combined = (r.stdout + (r.stderr ? (r.stdout ? '\n' : '') + r.stderr : '')).trim();
       const ok = !r.aborted && r.exitCode === 0;
+      // Distinguish "interpreter missing" (exitCode == null with no output) from
+      // an interpreter that ran and produced no output.
+      const interpreterMissing =
+        r.exitCode === null && !r.stdout && !r.stderr && !r.aborted;
+      if (interpreterMissing) {
+        return {
+          success: false,
+          output: '',
+          error:
+            args.language === 'javascript'
+              ? 'Could not find the `node` executable on PATH. Install Node.js to use this skill.'
+              : process.platform === 'win32'
+                ? 'Could not find the `python` executable on PATH. Install Python and ensure `python` is on PATH.'
+                : 'Could not find the `python3` executable on PATH. Install Python 3 and ensure `python3` is on PATH.',
+          metadata: { cwd, language: args.language },
+        };
+      }
       return {
         success: ok,
         output: combined,

@@ -77,7 +77,10 @@ export function registerAllIpcHandlers(deps: RegisterAllIpcDeps): void {
   };
   registerLLMHandlers(llmDeps);
 
-  const chatRoomDeps: ChatRoomHandlerDeps = { chatrooms: repos.chatrooms };
+  const chatRoomDeps: ChatRoomHandlerDeps = {
+    chatrooms: repos.chatrooms,
+    agents: repos.agents,
+  };
   registerChatRoomHandlers(chatRoomDeps);
 
   const messageDeps: MessageHandlerDeps = { messages: repos.messages };
@@ -102,6 +105,7 @@ export function registerAllIpcHandlers(deps: RegisterAllIpcDeps): void {
   const skillDeps: SkillHandlerDeps = {
     skillRegistry,
     agents: repos.agents,
+    userSkills: repos.userSkills,
   };
   registerSkillHandlers(skillDeps);
 

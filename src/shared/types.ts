@@ -385,6 +385,7 @@ export const IPC_CHANNELS = {
     ADD_AGENT: 'chatroom:add-agent',
     REMOVE_AGENT: 'chatroom:remove-agent',
     SET_AGENTS: 'chatroom:set-agents',
+    GET_OR_CREATE_DIRECT: 'chatroom:get-or-create-direct',
   },
   MESSAGE: {
     LIST: 'message:list',
@@ -424,6 +425,12 @@ export const IPC_CHANNELS = {
     UNINSTALL: 'skill:uninstall',
     EXECUTE: 'skill:execute',
     TOGGLE: 'skill:toggle',
+    CREATE: 'skill:create',
+    UPDATE: 'skill:update',
+    DELETE: 'skill:delete',
+    TEST: 'skill:test',
+    LIST_USER: 'skill:list-user',
+    GET_USER: 'skill:get-user',
   },
   TERMINAL: {
     CREATE: 'terminal:create',

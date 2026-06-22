@@ -13,6 +13,8 @@ export * from './types';
 export * from './registry';
 export * from './executor';
 export * from './builtin';
+export * from './user-script';
+export * from './user-skills';
 
 export function createDefaultRegistry(): SkillRegistry {
   const registry = getSkillRegistry();

@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Save, TestTube2, Loader2, Check, X, RefreshCw } from 'lucide-react';
+import { Save, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import Input, { Textarea } from './ui/Input';
+import TestConnectionButton from './TestConnectionButton';
+import { api, unwrap } from '../lib/api';
 import type { LLMProvider } from '../../shared/types';
 import type { LLMSettingsData } from '../lib/types';
 
@@ -19,7 +21,7 @@ export interface LLMProviderEditorProps {
   onClose: () => void;
   onSave: (data: LLMSettingsData) => Promise<void> | void;
   presets: LLMProviderPreset[];
-  onTest: (id: string) => Promise<{ ok: boolean; message: string }>;
+  onTest: (id: string) => Promise<{ ok: boolean; message: string; latencyMs?: number }>;
 }
 
 const EMPTY: LLMSettingsData = {
@@ -63,8 +65,6 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
 
   const [form, setForm] = useState<LLMSettingsData>(initial);
   const [submitting, setSubmitting] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [models, setModels] = useState<string[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [modelsError, setModelsError] = useState<string | null>(null);
@@ -72,7 +72,6 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
 
   useEffect(() => {
     setForm(initial);
-    setTestResult(null);
     setError(null);
     setModels([]);
   }, [initial, open]);
@@ -94,9 +93,6 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
     setLoadingModels(true);
     setModelsError(null);
     try {
-      const res = await fetch('about:blank');
-      void res;
-      const { api, unwrap } = await import('../lib/api');
       const list = unwrap(await api.llm.listModels({ baseUrl: form.baseUrl, apiKey: form.apiKey }));
       setModels(Array.isArray(list) ? list : []);
     } catch (err) {
@@ -106,19 +102,28 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
     }
   }
 
-  async function handleTest() {
-    if (!provider?.id) {
-      setTestResult({ ok: false, message: 'Save the provider first to test connection.' });
-      return;
+  async function handleInlineTest(): Promise<{ ok: boolean; message: string; latencyMs?: number }> {
+    if (!form.baseUrl?.trim() || !form.model?.trim()) {
+      return { ok: false, message: 'Base URL and model are required' };
     }
-    setTesting(true);
-    setTestResult(null);
-    try {
-      const result = await onTest(provider.id);
-      setTestResult(result);
-    } finally {
-      setTesting(false);
+    if (isEdit) {
+      return onTest(provider!.id);
     }
+    const result = unwrap(
+      await api.llm.test({
+        provider: {
+          name: form.name || 'Test',
+          baseUrl: form.baseUrl,
+          apiKey: form.apiKey || '',
+          model: form.model,
+        },
+      }),
+    );
+    return {
+      ok: !!(result as { success?: boolean }).success,
+      message: (result as { message?: string }).message ?? 'Connection successful',
+      latencyMs: (result as { latencyMs?: number }).latencyMs,
+    };
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -165,16 +170,15 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
           <Button variant="ghost" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
-          {isEdit && (
-            <Button
-              variant="secondary"
-              onClick={handleTest}
-              loading={testing}
-              leftIcon={<TestTube2 size={14} />}
-            >
-              Test
-            </Button>
-          )}
+          <TestConnectionButton
+            onTest={handleInlineTest}
+            label={isEdit ? 'Test saved' : 'Test connection'}
+            size="md"
+            variant="secondary"
+            inline={false}
+            showLastResult={false}
+            disabled={!form.baseUrl?.trim() || !form.model?.trim()}
+          />
           <Button
             variant="primary"
             type="submit"
@@ -189,21 +193,9 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
     >
       <form id="llm-provider-form" onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
+          <div className="flex items-center gap-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
+            <AlertCircle size={14} />
             {error}
-          </div>
-        )}
-
-        {testResult && (
-          <div
-            className={`flex items-center gap-2 rounded border px-3 py-2 text-sm ${
-              testResult.ok
-                ? 'border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-900/20 dark:text-green-300'
-                : 'border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-300'
-            }`}
-          >
-            {testResult.ok ? <Check size={14} /> : <X size={14} />}
-            <span>{testResult.message}</span>
           </div>
         )}
 
@@ -218,7 +210,7 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
                   type="button"
                   key={p.id}
                   onClick={() => applyPreset(p)}
-                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700"
+                  className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-medium transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
                 >
                   {p.name}
                 </button>
@@ -241,6 +233,11 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
             onChange={(v) => update('baseUrl', v)}
             placeholder="https://api.openai.com/v1"
             required
+            hint={
+              <span className="font-mono text-[10px] text-slate-400">
+                {isEdit ? 'Use https://…/v1 style endpoint' : 'Works with OpenAI, Ollama, LM Studio, OpenRouter, Groq, Together…'}
+              </span>
+            }
           />
         </div>
 
@@ -250,6 +247,7 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
           value={form.apiKey ?? ''}
           onChange={(v) => update('apiKey', v)}
           placeholder={isEdit ? '•••••••• (leave empty to keep)' : 'sk-…'}
+          hint="Stored encrypted via OS keychain (safeStorage)"
         />
 
         <div>
@@ -283,7 +281,7 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
                     key={m}
                     type="button"
                     onClick={() => update('model', m)}
-                    className={`truncate rounded px-2 py-1 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-700 ${
+                    className={`truncate rounded px-2 py-1 text-left text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 ${
                       form.model === m
                         ? 'bg-primary-100 text-primary-800 dark:bg-primary-900/40 dark:text-primary-200'
                         : ''
@@ -310,7 +308,7 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
               step={0.05}
               value={form.temperature ?? 0.7}
               onChange={(e) => update('temperature', Number(e.target.value))}
-              className="w-full"
+              className="w-full accent-primary-600"
             />
           </div>
           <Input
@@ -330,7 +328,7 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
               step={0.05}
               value={form.topP ?? 1}
               onChange={(e) => update('topP', Number(e.target.value))}
-              className="w-full"
+              className="w-full accent-primary-600"
             />
           </div>
         </div>
@@ -348,6 +346,7 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
             type="checkbox"
             checked={!!form.isDefault}
             onChange={(e) => update('isDefault', e.target.checked)}
+            className="rounded accent-primary-600"
           />
           Set as default provider
         </label>

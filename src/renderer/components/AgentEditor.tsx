@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Save, Loader2, Wand2 } from 'lucide-react';
+import { Save, Loader2, Wand2, Sparkles, RefreshCw } from 'lucide-react';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import Input, { Textarea, Select } from './ui/Input';
@@ -8,12 +8,15 @@ import { useLLMStore } from '../stores/llm';
 import { useSkillsStore } from '../stores/skills';
 import type { Agent, AgentRole, AgentSkill, Skill } from '../../shared/types';
 import type { AgentFormData } from '../lib/types';
+import type { AgentTemplate } from '../../shared/agent-templates';
 
 export interface AgentEditorProps {
   agent?: Agent | null;
   open: boolean;
   onClose: () => void;
   onSave: (data: AgentFormData) => Promise<void> | void;
+  initialTemplate?: AgentTemplate | null;
+  onChangeTemplate?: () => void;
 }
 
 const ROLE_OPTIONS: Array<{ value: AgentRole; label: string }> = [
@@ -43,43 +46,76 @@ const EMPTY: AgentFormData = {
   maxTokens: 4096,
 };
 
-const AgentEditor: React.FC<AgentEditorProps> = ({ agent, open, onClose, onSave }) => {
+const AgentEditor: React.FC<AgentEditorProps> = ({
+  agent,
+  open,
+  onClose,
+  onSave,
+  initialTemplate,
+  onChangeTemplate,
+}) => {
   const providers = useLLMStore((s) => s.providers);
   const loadProviders = useLLMStore((s) => s.loadProviders);
   const teams = useAgentsStore((s) => s.teams);
   const skills = useSkillsStore((s) => s.skills);
 
   const initial = useMemo<AgentFormData>(() => {
-    if (!agent) return EMPTY;
-    return {
-      id: agent.id,
-      name: agent.name,
-      description: agent.description ?? '',
-      avatar: agent.avatar ?? '',
-      systemPrompt: agent.systemPrompt,
-      providerId: agent.providerId,
-      teamId: agent.teamId ?? '',
-      role: agent.role,
-      color: agent.color ?? '#6366f1',
-      isLead: agent.isLead ?? false,
-      enabledSkills: agent.enabledSkills ?? [],
-      temperature: agent.temperature ?? 0.7,
-      maxTokens: agent.maxTokens ?? 4096,
-    };
-  }, [agent]);
+    if (agent) {
+      return {
+        id: agent.id,
+        name: agent.name,
+        description: agent.description ?? '',
+        avatar: agent.avatar ?? '',
+        systemPrompt: agent.systemPrompt,
+        providerId: agent.providerId,
+        teamId: agent.teamId ?? '',
+        role: agent.role,
+        color: agent.color ?? '#6366f1',
+        isLead: agent.isLead ?? false,
+        enabledSkills: agent.enabledSkills ?? [],
+        temperature: agent.temperature ?? 0.7,
+        maxTokens: agent.maxTokens ?? 4096,
+      };
+    }
+    if (initialTemplate) {
+      return {
+        name: initialTemplate.name,
+        description: initialTemplate.tagline,
+        avatar: '',
+        systemPrompt: initialTemplate.systemPrompt,
+        providerId: '',
+        teamId: '',
+        role: initialTemplate.role,
+        color: initialTemplate.color,
+        isLead: initialTemplate.isLead,
+        enabledSkills: initialTemplate.enabledSkills.map((name) => ({ name, enabled: true })),
+        temperature: initialTemplate.temperature,
+        maxTokens: initialTemplate.maxTokens,
+      };
+    }
+    return EMPTY;
+  }, [agent, initialTemplate]);
 
   const [form, setForm] = useState<AgentFormData>(initial);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [appliedTemplate, setAppliedTemplate] = useState<AgentTemplate | null>(
+    initialTemplate ?? null,
+  );
 
   useEffect(() => {
     setForm(initial);
     setError(null);
-  }, [initial, open]);
+    setAppliedTemplate(initialTemplate ?? null);
+  }, [initial, open, initialTemplate]);
 
   useEffect(() => {
     if (open && providers.length === 0) void loadProviders();
   }, [open, providers.length, loadProviders]);
+
+  function handleChangeTemplate() {
+    if (onChangeTemplate) onChangeTemplate();
+  }
 
   const update = <K extends keyof AgentFormData>(key: K, value: AgentFormData[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -151,6 +187,40 @@ const AgentEditor: React.FC<AgentEditorProps> = ({ agent, open, onClose, onSave 
         {error && (
           <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
             {error}
+          </div>
+        )}
+
+        {appliedTemplate && !agent && (
+          <div className="flex items-center justify-between gap-3 rounded-md border border-primary-200 bg-primary-50 px-3 py-2 text-sm dark:border-primary-800 dark:bg-primary-900/20">
+            <div className="flex min-w-0 items-center gap-2">
+              <Sparkles size={14} className="flex-shrink-0 text-primary-600 dark:text-primary-400" />
+              <span
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-sm"
+                style={{ backgroundColor: `${appliedTemplate.color}33` }}
+                aria-hidden
+              >
+                {appliedTemplate.emoji}
+              </span>
+              <div className="min-w-0">
+                <div className="truncate font-medium text-primary-800 dark:text-primary-200">
+                  Based on template: {appliedTemplate.name}
+                </div>
+                <div className="truncate text-xs text-primary-700/80 dark:text-primary-300/80">
+                  {appliedTemplate.tagline}
+                </div>
+              </div>
+            </div>
+            {onChangeTemplate && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleChangeTemplate}
+                leftIcon={<RefreshCw size={12} />}
+              >
+                Change
+              </Button>
+            )}
           </div>
         )}
 
