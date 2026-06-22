@@ -152,7 +152,7 @@ export function registerTerminalHandlers(deps: TerminalHandlerDeps): void {
     }
   });
 
-  ipcMain.handle(IPC_CHANNALS_TERMINAL_WRITE(), async (
+  ipcMain.handle(IPC_CHANNELS.TERMINAL.WRITE, async (
     _evt,
     args: { sessionId: string; data: string },
   ): Promise<ApiResponse<void>> => {
@@ -191,13 +191,6 @@ export function registerTerminalHandlers(deps: TerminalHandlerDeps): void {
       return failErr('TERMINAL.KILL', err);
     }
   });
-}
-
-// Helper that returns the WRITE channel; using a function call form keeps
-// the channel name out of the surrounding closure (a constant referenced
-// from IPC_CHANNELS).
-function IPC_CHANNALS_TERMINAL_WRITE(): string {
-  return IPC_CHANNELS.TERMINAL.WRITE;
 }
 
 function failErr(scope: string, err: unknown): ApiResponse<never> {
