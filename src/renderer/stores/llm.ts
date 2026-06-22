@@ -21,12 +21,12 @@ interface LLMState {
 
   loadProviders: () => Promise<void>;
   loadPresets: () => Promise<void>;
-  createProvider: (data: LLMSettingsData) Promise<LLMProvider>;
-  updateProvider: (id: string, data: Partial<LLMSettingsData>) Promise<LLMProvider>;
-  deleteProvider: (id: string) Promise<void>;
-  setDefault: (id: string) Promise<void>;
-  testProvider: (id: string) Promise<{ ok: boolean; message: string }>;
-  loadModels: (providerId: string) Promise<string[]>;
+  createProvider: (data: LLMSettingsData) => Promise<LLMProvider>;
+  updateProvider: (id: string, data: Partial<LLMSettingsData>) => Promise<LLMProvider | null>;
+  deleteProvider: (id: string) => Promise<void>;
+  setDefault: (id: string) => Promise<void>;
+  testProvider: (id: string) => Promise<{ ok: boolean; message: string }>;
+  loadModels: (providerId: string) => Promise<string[]>;
   clearError: () => void;
 }
 
@@ -55,8 +55,8 @@ export const useLLMStore = create<LLMState>((set, get) => ({
 
   loadPresets: async () => {
     try {
-      const presets = unwrap(await api.llm.presets());
-      set({ presets: presets as PresetInfo[] });
+      const presets = unwrap(await api.llm.presets()) as unknown as { presets: Array<{ id?: string; name: string; baseUrl: string; model?: string; defaultModel?: string }> };
+      set({ presets: (presets.presets ?? []).map((p) => ({ id: p.id ?? p.name, name: p.name, baseUrl: p.baseUrl, model: p.defaultModel ?? p.model ?? '' })) });
     } catch (err) {
       console.error('Failed to load LLM presets:', err);
     }

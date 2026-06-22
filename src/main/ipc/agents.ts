@@ -37,7 +37,7 @@ export function registerAgentHandlers(deps: AgentHandlerDeps): void {
 
   ipcMain.handle(IPC_CHANNELS.AGENT.CREATE, async (_evt, input: Partial<Agent>): Promise<ApiResponse<Agent>> => {
     try {
-      const created = agentRepo.create(sanitizeAgentInput(input));
+      const created = agentRepo.create(sanitizeAgentInput(input) as Parameters<typeof agentRepo.create>[0]);
       return ok(created);
     } catch (err) { return failErr('AGENT.CREATE', err); }
   });
@@ -86,7 +86,7 @@ export function registerAgentHandlers(deps: AgentHandlerDeps): void {
 
   ipcMain.handle(IPC_CHANNELS.TEAM.CREATE, async (_evt, input: Partial<Team>): Promise<ApiResponse<Team>> => {
     try {
-      const created = teamRepo.create(sanitizeTeamInput(input));
+      const created = teamRepo.create(sanitizeTeamInput(input) as Parameters<typeof teamRepo.create>[0]);
       return ok(created);
     } catch (err) { return failErr('TEAM.CREATE', err); }
   });

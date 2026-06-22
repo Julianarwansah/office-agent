@@ -14,15 +14,15 @@ interface AgentsState {
   loadTeams: () => Promise<void>;
 
   createAgent: (data: AgentFormData) => Promise<Agent>;
-  updateAgent: (id: string, data: Partial<AgentFormData>) => Promise<Agent>;
+  updateAgent: (id: string, data: Partial<AgentFormData>) => Promise<Agent | null>;
   deleteAgent: (id: string) => Promise<void>;
-  setAgentSkills: (id: string, skills: AgentSkill[]) => Promise<Agent>;
+  setAgentSkills: (id: string, skills: AgentSkill[]) => Promise<Agent | null>;
 
   createTeam: (data: TeamFormData) => Promise<Team>;
-  updateTeam: (id: string, data: Partial<TeamFormData>) => Promise<Team>;
+  updateTeam: (id: string, data: Partial<TeamFormData>) => Promise<Team | null>;
   deleteTeam: (id: string) => Promise<void>;
-  addAgentToTeam: (teamId: string, agentId: string) Promise<void>;
-  removeAgentFromTeam: (teamId: string, agentId: string) Promise<void>;
+  addAgentToTeam: (teamId: string, agentId: string) => Promise<void>;
+  removeAgentFromTeam: (teamId: string, agentId: string) => Promise<void>;
 }
 
 export const useAgentsStore = create<AgentsState>((set, get) => ({

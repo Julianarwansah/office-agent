@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "electron": "^31.0.0",
-    "electron-builder": "^24.13.3",
+    "electron-builder": "^25.0.0",
     "typescript": "^5.4.0",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
@@ -32,6 +32,9 @@
     "concurrently": "^8.2.0",
     "wait-on": "^7.2.0",
     "@types/better-sqlite3": "^7.6.0"
+  },
+  "overrides": {
+    "tinyglobby": "^0.2.10"
   },
   "dependencies": {
     "react": "^18.3.0",

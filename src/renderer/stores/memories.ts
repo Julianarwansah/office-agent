@@ -14,7 +14,7 @@ interface MemoriesState {
   loadMemories: (agentId: string) => Promise<void>;
   loadAllMemories: (agentIds: string[]) => Promise<void>;
   createMemory: (data: MemoryFormData) => Promise<Memory>;
-  updateMemory: (id: string, data: Partial<MemoryFormData>) => Promise<Memory>;
+  updateMemory: (id: string, data: Partial<MemoryFormData>) => Promise<Memory | null>;
   deleteMemory: (id: string) => Promise<void>;
   pinMemory: (id: string) => Promise<void>;
   unpinMemory: (id: string) => Promise<void>;
@@ -61,7 +61,7 @@ export const useMemoriesStore = create<MemoriesState>((set, get) => ({
         }),
       );
       const merged: Record<string, Memory[]> = { ...get().memoriesByAgent };
-      for (const [id, mems] of results) merged[id] = mems;
+      for (const [id, mems] of results) merged[id] = [...mems];
       set({ memoriesByAgent: merged, loading: false });
     } catch (err) {
       set({
@@ -87,6 +87,7 @@ export const useMemoriesStore = create<MemoriesState>((set, get) => ({
 
   updateMemory: async (id, data) => {
     const updated = unwrap(await api.memories.update(id, data as unknown as Partial<Memory>));
+    if (!updated) return null;
     set((s) => {
       const list = s.memoriesByAgent[updated.agentId] ?? [];
       const next = list.map((m) => (m.id === id ? updated : m));

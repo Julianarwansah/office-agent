@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Pin, Edit, Trash2, Calendar, AlertTriangle } from 'lucide-react';
 import type { Memory } from '../../shared/types';
-import { cn, formatDate } from '../../lib/utils';
+import { cn, formatDate } from '../lib/utils';
 
 export interface MemoryCardProps {
   memory: Memory;

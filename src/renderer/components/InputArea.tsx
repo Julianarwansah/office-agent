@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Send, Square, AtSign } from 'lucide-react';
 import type { Agent } from '../../shared/types';
-import { cn, getInitial } from '../../lib/utils';
+import { cn, getInitial } from '../lib/utils';
 
 export interface InputAreaProps {
   onSend: (message: string, mentionedAgentIds: string[]) => void;

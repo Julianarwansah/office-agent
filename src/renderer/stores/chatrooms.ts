@@ -17,13 +17,13 @@ interface ChatRoomsState {
   loadChatrooms: () => Promise<void>;
   setCurrentChatRoom: (id: string | null) => void;
   createChatRoom: (data: ChatRoomFormData) => Promise<ChatRoom>;
-  updateChatRoom: (id: string, data: Partial<ChatRoomFormData>) => Promise<ChatRoom>;
+  updateChatRoom: (id: string, data: Partial<ChatRoomFormData>) => Promise<ChatRoom | null>;
   deleteChatRoom: (id: string) => Promise<void>;
   addAgentToChatRoom: (chatRoomId: string, agentId: string) => Promise<void>;
   removeAgentFromChatRoom: (chatRoomId: string, agentId: string) => Promise<void>;
 
   loadMessages: (chatRoomId: string) => Promise<void>;
-  appendMessage: (chatRoomId: string, msg: Message) => void;
+  appendMessage: (chatRoomId: string, msg: Message | null) => void;
 
   sendMessage: (params: ChatSendParams) => Promise<void>;
   cancelStream: () => Promise<void>;
@@ -110,6 +110,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
   },
 
   appendMessage: (chatRoomId, msg) => {
+    if (!msg) return;
     set((s) => {
       const existing = s.messagesByRoom[chatRoomId] ?? [];
       return {
@@ -271,6 +272,7 @@ function subscribeToEvents(
     });
     try {
       const fetched = unwrap(await api.messages.get(messageId));
+      if (!fetched) return;
       set((s) => {
         const existing = s.messagesByRoom[chatRoomId] ?? [];
         const idx = existing.findIndex((m) => m.id === messageId);

@@ -19,15 +19,13 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
   error: null,
 
   loadSkills: async () => {
-    set({ loading: true, error: null });
+    set({ loading: true });
     try {
       const skills = unwrap(await api.skills.list());
-      set({ skills, loading: false });
+      set({ skills: skills as unknown as Skill[], loading: false });
     } catch (err) {
-      set({
-        loading: false,
-        error: err instanceof Error ? err.message : 'Failed to load skills',
-      });
+      console.error('Failed to load skills:', err);
+      set({ loading: false });
     }
   },
 

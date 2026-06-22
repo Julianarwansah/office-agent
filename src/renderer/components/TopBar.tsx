@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, Laptop, ExternalLink, Activity } from 'lucide-react';
+import { Sun, Moon, Laptop, ExternalLink, Activity, type LucideIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useAppStore } from '../stores/app';
 import type { AppTheme } from '../../shared/types';
@@ -31,7 +31,7 @@ const TopBar: React.FC = () => {
 
   const title = getPageTitle(location.pathname);
 
-  const themeOptions: Array<{ value: AppTheme; icon: React.ComponentType<{ size?: number }>; label: string }> = [
+  const themeOptions: Array<{ value: AppTheme; icon: LucideIcon; label: string }> = [
     { value: 'light', icon: Sun, label: 'Light' },
     { value: 'dark', icon: Moon, label: 'Dark' },
     { value: 'system', icon: Laptop, label: 'System' },

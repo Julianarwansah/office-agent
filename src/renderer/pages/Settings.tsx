@@ -3,6 +3,7 @@ import { Save, Plus, Trash2, Star, TestTube2, Loader2, Check, X } from 'lucide-r
 import { useLLMStore } from '../stores/llm';
 import { useAppStore } from '../stores/app';
 import { useAgentsStore } from '../stores/agents';
+import { useWorkspaceStore } from '../stores/workspace';
 import { cn } from '../lib/utils';
 import type { AppSettings, LLMProvider } from '../../shared/types';
 import type { LLMSettingsData } from '../lib/types';
@@ -521,11 +522,7 @@ const ProviderEditor: React.FC<ProviderEditorProps> = ({ draft, presets, isEdit,
 };
 
 const WorkspaceTab: React.FC = () => {
-  const { workspaces, loadWorkspaces, setCurrentWorkspace, loading } = useAgentsStore();
-  // workspaces is also managed via workspace store; but we re-use useAgentsStore indirectly.
-  // Use the workspace store instead for the actual list:
-  void loadWorkspaces;
-  void setCurrentWorkspace;
+  const { workspaces, loadWorkspaces, setCurrentWorkspace, loading } = useWorkspaceStore();
   return (
     <div className="card p-6">
       <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Workspaces</h2>

@@ -49,7 +49,7 @@ export function registerLLMHandlers(deps: LLMHandlerDeps): void {
 
   ipcMain.handle(IPC_CHANNELS.LLM.CREATE, async (_evt, input: Partial<LLMProvider>): Promise<ApiResponse<LLMProvider>> => {
     try {
-      const created = providers.create(sanitizeProviderInput(input));
+      const created = providers.create(sanitizeProviderInput(input) as Parameters<typeof providers.create>[0]);
       providerManager.invalidate(created.id);
       return ok(created);
     } catch (err) {

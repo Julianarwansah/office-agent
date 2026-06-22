@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  type LucideIcon,
 } from 'lucide-react';
 import { useAppStore } from '../stores/app';
 import { cn } from '../lib/utils';
@@ -19,7 +20,7 @@ import { cn } from '../lib/utils';
 interface NavEntry {
   label: string;
   path: string;
-  icon: React.ComponentType<{ className?: string; size?: number }>;
+  icon: LucideIcon;
   end?: boolean;
 }
 

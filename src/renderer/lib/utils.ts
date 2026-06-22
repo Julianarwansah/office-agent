@@ -140,7 +140,14 @@ export function renderMarkdown(md: string): string {
   ensureHljs();
   try {
     const renderer = new marked.Renderer();
-    renderer.code = ({ text, lang }: { text: string; lang?: string }) => {
+    (renderer as unknown as { code: (code: unknown, infostring: string | undefined, escaped: boolean) => string }).code = (
+      codeOrObj: unknown,
+    ) => {
+      const args = (typeof codeOrObj === 'object' && codeOrObj !== null
+        ? (codeOrObj as { text?: string; lang?: string })
+        : { text: String(codeOrObj ?? ''), lang: undefined });
+      const text = args.text ?? '';
+      const lang = args.lang;
       const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext';
       let highlighted = '';
       try {

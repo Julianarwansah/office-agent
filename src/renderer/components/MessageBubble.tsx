@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Terminal, AlertTriangle, User } from 'lucide-react';
 import type { LLMToolCall, Message } from '../../shared/types';
-import { cn, formatTime, getInitial, renderMarkdown } from '../../lib/utils';
+import { cn, formatTime, getInitial, renderMarkdown } from '../lib/utils';
 
 export interface MessageBubbleProps {
   message: Message;
