@@ -12,31 +12,17 @@ import { ToolExecutionRepository, toolExecutions } from './tool-executions';
 import { SettingsRepository, settings, DEFAULT_APP_SETTINGS } from './settings';
 import { WorkspaceRepository, workspaces } from './workspaces';
 import { UserSkillRepository, userSkills } from './user-skills';
-
-export {
-  LLMProviderRepository,
-  llmProviders,
-  TeamRepository,
-  teams,
-  AgentRepository,
-  agents,
-  ChatRoomRepository,
-  chatrooms,
-  MessageRepository,
-  messages,
-  MemoryRepository,
-  memories,
-  ConversationSummaryRepository,
-  summaries,
-  ToolExecutionRepository,
-  toolExecutions,
-  SettingsRepository,
-  settings,
-  DEFAULT_APP_SETTINGS,
-  WorkspaceRepository,
-  workspaces,
-  UserSkillRepository,
-  userSkills,
+import {
+  KanbanRepository,
+  kanban,
+  BoardCreateInput,
+  BoardUpdateInput,
+  ColumnCreateInput,
+  ColumnUpdateInput,
+  TaskCreateInput,
+  TaskUpdateInput,
+  EventCreateInput,
+  DEFAULT_KANBAN_COLUMNS,
 };
 
 export interface Repositories {
@@ -51,6 +37,7 @@ export interface Repositories {
   settings: SettingsRepository;
   workspaces: WorkspaceRepository;
   userSkills: UserSkillRepository;
+  kanban: KanbanRepository;
 }
 
 export function getRepositories(): Repositories {
@@ -69,5 +56,6 @@ export function getRepositories(): Repositories {
     settings,
     workspaces,
     userSkills,
+    kanban,
   };
 }

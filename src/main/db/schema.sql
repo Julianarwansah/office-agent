@@ -197,6 +197,90 @@ CREATE TABLE IF NOT EXISTS user_skills (
 
 CREATE INDEX IF NOT EXISTS idx_user_skills_enabled ON user_skills(enabled);
 
+-- ---------------------------------------------------------------------------
+-- Kanban boards, columns, tasks, and an audit log of task lifecycle events.
+-- The audit log gives us a workflow/process timeline per task and per board.
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS kanban_boards (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  color TEXT,
+  team_id TEXT,
+  owner_agent_id TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL,
+  FOREIGN KEY (owner_agent_id) REFERENCES agents(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_kanban_boards_team ON kanban_boards(team_id);
+CREATE INDEX IF NOT EXISTS idx_kanban_boards_owner ON kanban_boards(owner_agent_id);
+
+CREATE TABLE IF NOT EXISTS kanban_columns (
+  id TEXT PRIMARY KEY,
+  board_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  position INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'todo',
+  wip_limit INTEGER,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (board_id) REFERENCES kanban_boards(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_kanban_columns_board ON kanban_columns(board_id, position);
+
+CREATE TABLE IF NOT EXISTS kanban_tasks (
+  id TEXT PRIMARY KEY,
+  board_id TEXT NOT NULL,
+  column_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  status TEXT NOT NULL DEFAULT 'todo',
+  priority TEXT NOT NULL DEFAULT 'medium',
+  assignee_agent_id TEXT,
+  creator_agent_id TEXT,
+  due_date TEXT,
+  position INTEGER NOT NULL DEFAULT 0,
+  parent_task_id TEXT,
+  tags TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  completed_at TEXT,
+  FOREIGN KEY (board_id) REFERENCES kanban_boards(id) ON DELETE CASCADE,
+  FOREIGN KEY (column_id) REFERENCES kanban_columns(id) ON DELETE CASCADE,
+  FOREIGN KEY (assignee_agent_id) REFERENCES agents(id) ON DELETE SET NULL,
+  FOREIGN KEY (creator_agent_id) REFERENCES agents(id) ON DELETE SET NULL,
+  FOREIGN KEY (parent_task_id) REFERENCES kanban_tasks(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_kanban_tasks_board ON kanban_tasks(board_id, position);
+CREATE INDEX IF NOT EXISTS idx_kanban_tasks_column ON kanban_tasks(column_id, position);
+CREATE INDEX IF NOT EXISTS idx_kanban_tasks_assignee ON kanban_tasks(assignee_agent_id);
+CREATE INDEX IF NOT EXISTS idx_kanban_tasks_status ON kanban_tasks(status);
+
+CREATE TABLE IF NOT EXISTS kanban_task_events (
+  id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL,
+  board_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  from_column_id TEXT,
+  to_column_id TEXT,
+  agent_id TEXT,
+  message TEXT,
+  metadata TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (task_id) REFERENCES kanban_tasks(id) ON DELETE CASCADE,
+  FOREIGN KEY (board_id) REFERENCES kanban_boards(id) ON DELETE CASCADE,
+  FOREIGN KEY (from_column_id) REFERENCES kanban_columns(id) ON DELETE SET NULL,
+  FOREIGN KEY (to_column_id) REFERENCES kanban_columns(id) ON DELETE SET NULL,
+  FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_kanban_events_task ON kanban_task_events(task_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_kanban_events_board ON kanban_task_events(board_id, created_at);
+
 -- Only one default LLM provider at a time
 CREATE TRIGGER IF NOT EXISTS trg_llm_providers_single_default
 BEFORE UPDATE OF is_default ON llm_providers

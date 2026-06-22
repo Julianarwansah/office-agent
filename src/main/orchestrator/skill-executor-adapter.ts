@@ -22,11 +22,13 @@ import type {
 import { SkillExecutor } from '../skills/executor';
 import type { SkillContext } from '../skills/types';
 import type { SkillRegistry } from '../skills/registry';
-import type { ToolExecutionRepository } from '../db/repositories';
+import type { AgentRepository, KanbanRepository, ToolExecutionRepository } from '../db/repositories';
 
 export interface OrchestratorSkillExecutorDeps {
   registry: SkillRegistry;
   toolExecutionRepo: ToolExecutionRepository;
+  agentsRepo?: AgentRepository;
+  kanbanRepo?: KanbanRepository;
   agentDelegate: (
     targetAgentId: string,
     task: string,
@@ -37,11 +39,15 @@ export interface OrchestratorSkillExecutorDeps {
 export class OrchestratorSkillExecutor implements SkillExecutorLike {
   private readonly executor: SkillExecutor;
   private readonly toolExecutionRepo: ToolExecutionRepository;
+  private readonly agentsRepo?: AgentRepository;
+  private readonly kanbanRepo?: KanbanRepository;
   private readonly agentDelegate: OrchestratorSkillExecutorDeps['agentDelegate'];
 
   constructor(deps: OrchestratorSkillExecutorDeps) {
     this.executor = new SkillExecutor();
     this.toolExecutionRepo = deps.toolExecutionRepo;
+    this.agentsRepo = deps.agentsRepo;
+    this.kanbanRepo = deps.kanbanRepo;
     this.agentDelegate = deps.agentDelegate;
 
     // Wire persistence: the concrete executor invokes this callback for
@@ -70,7 +76,7 @@ export class OrchestratorSkillExecutor implements SkillExecutorLike {
         create: (row) => this.toolExecutionRepo.create(row),
         update: (id, patch) => this.toolExecutionRepo.update(id, patch) as ToolExecution,
       },
-      agentDelegate: async (targetAgentId, task, ctx) => {
+      agentDelegate: async (targetAgentId, task, _ctx) => {
         return this.agentDelegate(targetAgentId, task, {
           chatRoomId: context.chatRoomId,
           parentMessageId: context.messageId,
@@ -78,6 +84,18 @@ export class OrchestratorSkillExecutor implements SkillExecutorLike {
         });
       },
     };
+
+    if (this.agentsRepo) {
+      skillContext.agentsRepo = {
+        findById: (id) => this.agentsRepo!.findById(id),
+        findAll: () => this.agentsRepo!.findAll(),
+      };
+    }
+    if (this.kanbanRepo) {
+      // The skill only relies on the structural shape defined in
+      // `kanban-ops.ts`; pass the repo through verbatim.
+      skillContext.kanbanRepo = this.kanbanRepo as unknown as SkillContext['kanbanRepo'];
+    }
 
     const wrapped = await this.executor.execute(toolCall, skillContext);
     return {

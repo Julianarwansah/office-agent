@@ -9,6 +9,7 @@ import { dateTimeSkill } from './datetime';
 import { memoryOpsSkill } from './memory-ops';
 import { calculatorSkill } from './calculator';
 import { agentDelegateSkill } from './agent-delegate';
+import { kanbanOpsSkill } from './kanban-ops';
 
 export const BUILTIN_SKILLS = [
   terminalSkill,
@@ -21,6 +22,7 @@ export const BUILTIN_SKILLS = [
   memoryOpsSkill,
   calculatorSkill,
   agentDelegateSkill,
+  kanbanOpsSkill,
 ] as const;
 
 export function registerBuiltinSkills(registry: SkillRegistry): SkillRegistry {
@@ -41,4 +43,5 @@ export {
   memoryOpsSkill,
   calculatorSkill,
   agentDelegateSkill,
+  kanbanOpsSkill,
 };

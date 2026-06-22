@@ -50,28 +50,37 @@ const RIGHT_ASSOC: Record<string, boolean> = {
   '^': true,
 };
 
-const FUNCTIONS: Record<string, (args: number[]) => number> = {
-  abs: (a) => Math.abs(a[0] ?? 0),
-  sqrt: (a) => Math.sqrt(a[0] ?? 0),
-  cbrt: (a) => Math.cbrt(a[0] ?? 0),
-  sin: (a) => Math.sin(a[0] ?? 0),
-  cos: (a) => Math.cos(a[0] ?? 0),
-  tan: (a) => Math.tan(a[0] ?? 0),
-  asin: (a) => Math.asin(a[0] ?? 0),
-  acos: (a) => Math.acos(a[0] ?? 0),
-  atan: (a) => Math.atan(a[0] ?? 0),
-  atan2: (a) => Math.atan2(a[0] ?? 0, a[1] ?? 0),
-  log: (a) => Math.log(a[0] ?? 1),
-  log2: (a) => Math.log2(a[0] ?? 1),
-  log10: (a) => Math.log10(a[0] ?? 1),
-  exp: (a) => Math.exp(a[0] ?? 0),
-  floor: (a) => Math.floor(a[0] ?? 0),
-  ceil: (a) => Math.ceil(a[0] ?? 0),
-  round: (a) => Math.round(a[0] ?? 0),
-  min: (a) => Math.min(...a),
-  max: (a) => Math.max(...a),
-  pow: (a) => Math.pow(a[0] ?? 0, a[1] ?? 0),
-  sign: (a) => Math.sign(a[0] ?? 0),
+interface FunctionSpec {
+  /** Number of arguments expected on the RPN stack. */
+  arity: number;
+  /** Variadic: any number of args (used by min/max). */
+  variadic?: boolean;
+  /** Implementation. */
+  fn: (args: number[]) => number;
+}
+
+const FUNCTIONS: Record<string, FunctionSpec> = {
+  abs:     { arity: 1, fn: (a) => Math.abs(a[0] ?? 0) },
+  sqrt:    { arity: 1, fn: (a) => Math.sqrt(a[0] ?? 0) },
+  cbrt:    { arity: 1, fn: (a) => Math.cbrt(a[0] ?? 0) },
+  sin:     { arity: 1, fn: (a) => Math.sin(a[0] ?? 0) },
+  cos:     { arity: 1, fn: (a) => Math.cos(a[0] ?? 0) },
+  tan:     { arity: 1, fn: (a) => Math.tan(a[0] ?? 0) },
+  asin:    { arity: 1, fn: (a) => Math.asin(a[0] ?? 0) },
+  acos:    { arity: 1, fn: (a) => Math.acos(a[0] ?? 0) },
+  atan:    { arity: 1, fn: (a) => Math.atan(a[0] ?? 0) },
+  atan2:   { arity: 2, fn: (a) => Math.atan2(a[0] ?? 0, a[1] ?? 0) },
+  log:     { arity: 1, fn: (a) => Math.log(a[0] ?? 1) },
+  log2:    { arity: 1, fn: (a) => Math.log2(a[0] ?? 1) },
+  log10:   { arity: 1, fn: (a) => Math.log10(a[0] ?? 1) },
+  exp:     { arity: 1, fn: (a) => Math.exp(a[0] ?? 0) },
+  floor:   { arity: 1, fn: (a) => Math.floor(a[0] ?? 0) },
+  ceil:    { arity: 1, fn: (a) => Math.ceil(a[0] ?? 0) },
+  round:   { arity: 1, fn: (a) => Math.round(a[0] ?? 0) },
+  min:     { arity: 1, variadic: true, fn: (a) => Math.min(...a) },
+  max:     { arity: 1, variadic: true, fn: (a) => Math.max(...a) },
+  pow:     { arity: 2, fn: (a) => Math.pow(a[0] ?? 0, a[1] ?? 0) },
+  sign:    { arity: 1, fn: (a) => Math.sign(a[0] ?? 0) },
 };
 
 const CONSTANTS: Record<string, number> = {
@@ -264,13 +273,27 @@ function evalRPN(rpn: Token[]): number {
       if (CONSTANTS[name] !== undefined) {
         stack.push(CONSTANTS[name]);
       } else if (FUNCTIONS[name]) {
-        const argc = FUNCTIONS[name].length;
+        const spec = FUNCTIONS[name];
+        // For variadic functions (min/max) the comma operator consumed the
+        // separators during tokenization; pop everything up to the
+        // matching parenthesis marker. We approximate this by consuming
+        // until the stack is empty (these functions accept any number
+        // of args, and the parser will not leave extra values).
+        const argc = spec.variadic ? stack.length : spec.arity;
+        if (stack.length < argc) {
+          throw new Error(
+            `Invalid expression: ${name}() expects ${spec.arity} argument(s), got ${stack.length}`,
+          );
+        }
         const args: number[] = [];
         for (let i = 0; i < argc; i++) args.unshift(stack.pop() as number);
         if (args.some((a) => typeof a !== 'number' || !Number.isFinite(a))) {
           throw new Error(`Invalid argument for ${name}`);
         }
-        const r = FUNCTIONS[name](args);
+        const r = spec.fn(args);
+        if (!Number.isFinite(r)) {
+          throw new Error(`Function ${name}() produced a non-finite result`);
+        }
         stack.push(r);
       } else {
         throw new Error(`Unknown identifier: ${name}`);

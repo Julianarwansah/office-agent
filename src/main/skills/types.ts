@@ -28,6 +28,11 @@ export interface SkillContext {
   signal?: AbortSignal;
   onProgress?: (msg: string) => void;
   memoryRepo?: unknown;
+  kanbanRepo?: unknown;
+  agentsRepo?: {
+    findById(id: string): Agent | null;
+    findAll(): Agent[];
+  };
   agentDelegate?: (targetAgentId: string, task: string, context?: string) => Promise<string>;
   toolExecutionRepo?: {
     create: (row: Omit<ToolExecution, 'completedAt' | 'result' | 'error'>) => ToolExecution | Promise<ToolExecution>;

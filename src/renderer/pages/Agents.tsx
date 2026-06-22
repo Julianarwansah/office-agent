@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, Bot, Trash2, Edit, Wand2, Users, Sparkles, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Bot, Trash2, Edit, Wand2, Users, Sparkles, AlertCircle, MessageSquare } from 'lucide-react';
 import { useAgentsStore } from '../stores/agents';
+import { useChatRoomsStore } from '../stores/chatrooms';
 import AgentEditor from '../components/AgentEditor';
 import AgentTemplatePicker from '../components/AgentTemplatePicker';
 import Modal from '../components/ui/Modal';
@@ -12,12 +14,14 @@ import type { AgentFormData } from '../lib/types';
 import { incrementTemplateUsage } from '../lib/template-usage';
 
 const AgentsPage: React.FC = () => {
+  const navigate = useNavigate();
   const agents = useAgentsStore((s) => s.agents);
   const teams = useAgentsStore((s) => s.teams);
   const loadingAgents = useAgentsStore((s) => s.loadingAgents);
   const createAgent = useAgentsStore((s) => s.createAgent);
   const updateAgent = useAgentsStore((s) => s.updateAgent);
   const deleteAgent = useAgentsStore((s) => s.deleteAgent);
+  const getOrCreateDirect = useChatRoomsStore((s) => s.getOrCreateDirect);
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Agent | null>(null);
@@ -93,6 +97,15 @@ const AgentsPage: React.FC = () => {
     await deleteAgent(agent.id);
   }
 
+  async function handleStartChat(agent: Agent) {
+    try {
+      const chatroom = await getOrCreateDirect(agent.id);
+      navigate(`/chat/${chatroom.id}`);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to start chat.');
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -150,6 +163,7 @@ const AgentsPage: React.FC = () => {
               teamName={agent.teamId ? teamsById.get(agent.teamId)?.name : undefined}
               onEdit={() => openEdit(agent)}
               onDelete={() => handleDelete(agent)}
+              onChat={() => void handleStartChat(agent)}
             />
           ))}
         </div>
@@ -253,9 +267,10 @@ interface AgentCardProps {
   teamName?: string;
   onEdit: () => void;
   onDelete: () => void;
+  onChat: () => void;
 }
 
-const AgentCard: React.FC<AgentCardProps> = ({ agent, teamName, onEdit, onDelete }) => {
+const AgentCard: React.FC<AgentCardProps> = ({ agent, teamName, onEdit, onDelete, onChat }) => {
   return (
     <div className="card group relative flex flex-col gap-3 overflow-hidden p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
       <div
@@ -313,23 +328,34 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, teamName, onEdit, onDelete
         </span>
       </div>
 
-      <div className="relative mt-auto flex items-center justify-end gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+      <div className="relative mt-auto flex items-center justify-between gap-2 pt-1">
         <button
           type="button"
-          onClick={onEdit}
-          className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
-          title="Edit"
+          onClick={onChat}
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
+          title={`Start a 1:1 chat with ${agent.name}`}
         >
-          <Edit size={14} />
+          <MessageSquare size={12} />
+          Chat
         </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="rounded-md p-1.5 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
-          title="Delete"
-        >
-          <Trash2 size={14} />
-        </button>
+        <div className="flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+            title="Edit"
+          >
+            <Edit size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            className="rounded-md p-1.5 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
+            title="Delete"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       </div>
     </div>
   );

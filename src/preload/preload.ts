@@ -15,11 +15,18 @@
 
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
-import { IPC_CHANNELS, RENDERER_EVENT_CHANNELS } from '../shared/types';
+import {
+  IPC_CHANNELS,
+  RENDERER_EVENT_CHANNELS,
+} from '../shared/types';
 import type {
   Agent,
   AppSettings,
   ChatRoom,
+  KanbanBoard,
+  KanbanColumn,
+  KanbanTask,
+  KanbanTaskEvent,
   LLMProvider,
   Memory,
   Message,
@@ -414,6 +421,67 @@ const officeAPI: OfficeAPI = {
     },
     toggleDevTools() {
       return invoke<void>(IPC_CHANNELS.APP.TOGGLE_DEVTOOLS);
+    },
+  },
+
+  /* ----------------------------- Kanban --------------------------- */
+  kanban: {
+    listBoards() {
+      return invoke<KanbanBoard[]>(IPC_CHANNELS.KANBAN.LIST_BOARDS);
+    },
+    getBoard(id) {
+      return invoke<KanbanBoard | null>(IPC_CHANNELS.KANBAN.GET_BOARD, id);
+    },
+    createBoard(input) {
+      return invoke<KanbanBoard>(IPC_CHANNELS.KANBAN.CREATE_BOARD, input);
+    },
+    updateBoard(id, partial) {
+      return invoke<KanbanBoard | null>(IPC_CHANNELS.KANBAN.UPDATE_BOARD, id, partial);
+    },
+    deleteBoard(id) {
+      return invoke<boolean>(IPC_CHANNELS.KANBAN.DELETE_BOARD, id);
+    },
+
+    listColumns(boardId) {
+      return invoke<KanbanColumn[]>(IPC_CHANNELS.KANBAN.LIST_COLUMNS, boardId);
+    },
+    createColumn(input) {
+      return invoke<KanbanColumn>(IPC_CHANNELS.KANBAN.CREATE_COLUMN, input);
+    },
+    updateColumn(id, partial) {
+      return invoke<KanbanColumn | null>(IPC_CHANNELS.KANBAN.UPDATE_COLUMN, id, partial);
+    },
+    deleteColumn(id) {
+      return invoke<boolean>(IPC_CHANNELS.KANBAN.DELETE_COLUMN, id);
+    },
+    reorderColumns(args) {
+      return invoke<KanbanColumn[]>(IPC_CHANNELS.KANBAN.REORDER_COLUMNS, args);
+    },
+
+    listTasks(args) {
+      return invoke<KanbanTask[]>(IPC_CHANNELS.KANBAN.LIST_TASKS, args);
+    },
+    getTask(id) {
+      return invoke<KanbanTask | null>(IPC_CHANNELS.KANBAN.GET_TASK, id);
+    },
+    createTask(input) {
+      return invoke<KanbanTask>(IPC_CHANNELS.KANBAN.CREATE_TASK, input);
+    },
+    updateTask(id, partial) {
+      return invoke<KanbanTask | null>(IPC_CHANNELS.KANBAN.UPDATE_TASK, id, partial);
+    },
+    moveTask(args) {
+      return invoke<KanbanTask | null>(IPC_CHANNELS.KANBAN.MOVE_TASK, args);
+    },
+    deleteTask(id) {
+      return invoke<boolean>(IPC_CHANNELS.KANBAN.DELETE_TASK, id);
+    },
+
+    listEvents(args) {
+      return invoke<KanbanTaskEvent[]>(IPC_CHANNELS.KANBAN.LIST_EVENTS, args);
+    },
+    addEvent(input) {
+      return invoke<KanbanTaskEvent>(IPC_CHANNELS.KANBAN.ADD_EVENT, input);
     },
   },
 

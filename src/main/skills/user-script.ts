@@ -150,8 +150,10 @@ function sleepImpl(ms: number): Promise<void> {
  * parse.
  */
 function compileScript(body: string): (sandbox: SandboxGlobals) => Promise<unknown> {
-  // We wrap the body in an async function so it can `await` and `return`.
-  const wrapped = `"use strict"; return (async () => {\n${body}\n})();`;
+  // Wrap the body in an async function so the user can `await` and `return`
+  // a SkillResult. The script's return value is the Promise's resolved
+  // value, which the caller awaits.
+  const wrapped = `(async () => {\n${body}\n})()`;
   let script: vm.Script;
   try {
     script = new vm.Script(wrapped, { filename: 'user-skill.js' });
@@ -247,7 +249,7 @@ export function buildUserScriptSkill(input: {
         },
       };
     },
-    async execute(args, ctx): Promise<SkillResult> {
+    async execute(args: Record<string, unknown>, ctx: SkillContext): Promise<SkillResult> {
       if (compileError) {
         return { success: false, output: '', error: compileError };
       }

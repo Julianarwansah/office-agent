@@ -249,6 +249,72 @@ export interface Workspace {
   createdAt: number;
 }
 
+export type KanbanTaskStatus = 'todo' | 'in_progress' | 'review' | 'done' | 'blocked';
+export type KanbanTaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type KanbanTaskEventType =
+  | 'created'
+  | 'moved'
+  | 'assigned'
+  | 'unassigned'
+  | 'updated'
+  | 'completed'
+  | 'reopened'
+  | 'commented'
+  | 'deleted';
+
+export interface KanbanBoard {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  teamId?: string;
+  ownerAgentId?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface KanbanColumn {
+  id: string;
+  boardId: string;
+  name: string;
+  position: number;
+  status: KanbanTaskStatus;
+  wipLimit?: number;
+  createdAt: number;
+}
+
+export interface KanbanTask {
+  id: string;
+  boardId: string;
+  columnId: string;
+  title: string;
+  description?: string;
+  status: KanbanTaskStatus;
+  priority: KanbanTaskPriority;
+  assigneeAgentId?: string;
+  creatorAgentId?: string;
+  dueDate?: number;
+  position: number;
+  parentTaskId?: string;
+  tags?: string[];
+  createdAt: number;
+  updatedAt: number;
+  completedAt?: number;
+}
+
+export interface KanbanTaskEvent {
+  id: string;
+  taskId: string;
+  boardId: string;
+  eventType: KanbanTaskEventType;
+  fromColumnId?: string;
+  toColumnId?: string;
+  agentId?: string;
+  message?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: number;
+}
+
 export type AppTheme = 'light' | 'dark' | 'system';
 
 export interface AppSettings {
@@ -489,6 +555,26 @@ export const IPC_CHANNELS = {
     OPEN_EXTERNAL: 'app:open-external',
     PLATFORM: 'app:platform',
     VERSION: 'app:version',
+  },
+  KANBAN: {
+    LIST_BOARDS: 'kanban:list-boards',
+    GET_BOARD: 'kanban:get-board',
+    CREATE_BOARD: 'kanban:create-board',
+    UPDATE_BOARD: 'kanban:update-board',
+    DELETE_BOARD: 'kanban:delete-board',
+    LIST_COLUMNS: 'kanban:list-columns',
+    CREATE_COLUMN: 'kanban:create-column',
+    UPDATE_COLUMN: 'kanban:update-column',
+    DELETE_COLUMN: 'kanban:delete-column',
+    REORDER_COLUMNS: 'kanban:reorder-columns',
+    LIST_TASKS: 'kanban:list-tasks',
+    GET_TASK: 'kanban:get-task',
+    CREATE_TASK: 'kanban:create-task',
+    UPDATE_TASK: 'kanban:update-task',
+    MOVE_TASK: 'kanban:move-task',
+    DELETE_TASK: 'kanban:delete-task',
+    LIST_EVENTS: 'kanban:list-events',
+    ADD_EVENT: 'kanban:add-event',
   },
 } as const;
 

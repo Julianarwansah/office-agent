@@ -17,3 +17,155 @@ Error occurred in handler for 'llm:presets': Error: An object could not be clone
     at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
 Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
     at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'chatroom:get-or-create-direct': Error: No handler registered for 'chatroom:get-or-create-direct'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'chatroom:get-or-create-direct': Error: No handler registered for 'chatroom:get-or-create-direct'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'chatroom:get-or-create-direct': Error: No handler registered for 'chatroom:get-or-create-direct'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'chatroom:get-or-create-direct': Error: No handler registered for 'chatroom:get-or-create-direct'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'chatroom:get-or-create-direct': Error: No handler registered for 'chatroom:get-or-create-direct'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'chatroom:get-or-create-direct': Error: No handler registered for 'chatroom:get-or-create-direct'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'chatroom:get-or-create-direct': Error: No handler registered for 'chatroom:get-or-create-direct'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+Error occurred in handler for 'skill:list-user': Error: No handler registered for 'skill:list-user'
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83837)
+    at WebContents.emit (node:events:519:28)
+Error occurred in handler for 'llm:presets': Error: An object could not be cloned.
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:83767)
+[19756:0622/161354.959:ERROR:network_service_instance_impl.cc(600)] Network service crashed, restarting service.

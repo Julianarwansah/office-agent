@@ -18,6 +18,13 @@ import type {
   AppSettings,
   ChatRoom,
   ConversationSummary,
+  KanbanBoard,
+  KanbanColumn,
+  KanbanTask,
+  KanbanTaskEvent,
+  KanbanTaskEventType,
+  KanbanTaskPriority,
+  KanbanTaskStatus,
   LLMTool,
   LLMProvider,
   Memory,
@@ -404,6 +411,53 @@ export interface OfficeAPI {
     minimize(): Promise<ApiResponse<void>>;
     maximize(): Promise<ApiResponse<void>>;
     toggleDevTools(): Promise<ApiResponse<void>>;
+  };
+
+  /* ----------------------------- Kanban --------------------------- */
+  kanban: {
+    listBoards(): Promise<ApiResponse<KanbanBoard[]>>;
+    getBoard(id: string): Promise<ApiResponse<KanbanBoard | null>>;
+    createBoard(input: {
+      name: string;
+      description?: string;
+      color?: string;
+      teamId?: string;
+      ownerAgentId?: string;
+      withDefaultColumns?: boolean;
+    }): Promise<ApiResponse<KanbanBoard>>;
+    updateBoard(id: string, partial: Partial<KanbanBoard>): Promise<ApiResponse<KanbanBoard | null>>;
+    deleteBoard(id: string): Promise<ApiResponse<boolean>>;
+
+    listColumns(boardId: string): Promise<ApiResponse<KanbanColumn[]>>;
+    createColumn(input: {
+      boardId: string;
+      name: string;
+      status?: KanbanTaskStatus;
+      position?: number;
+      wipLimit?: number;
+    }): Promise<ApiResponse<KanbanColumn>>;
+    updateColumn(id: string, partial: Partial<KanbanColumn>): Promise<ApiResponse<KanbanColumn | null>>;
+    deleteColumn(id: string): Promise<ApiResponse<boolean>>;
+    reorderColumns(args: { boardId: string; orderedIds: string[] }): Promise<ApiResponse<KanbanColumn[]>>;
+
+    listTasks(args: { boardId?: string; columnId?: string; assigneeAgentId?: string }): Promise<ApiResponse<KanbanTask[]>>;
+    getTask(id: string): Promise<ApiResponse<KanbanTask | null>>;
+    createTask(input: Partial<KanbanTask> & { title: string; boardId: string; columnId: string }): Promise<ApiResponse<KanbanTask>>;
+    updateTask(id: string, partial: Partial<KanbanTask>): Promise<ApiResponse<KanbanTask | null>>;
+    moveTask(args: { taskId: string; toColumnId: string; toPosition?: number }): Promise<ApiResponse<KanbanTask | null>>;
+    deleteTask(id: string): Promise<ApiResponse<boolean>>;
+
+    listEvents(args: { boardId?: string; taskId?: string; limit?: number }): Promise<ApiResponse<KanbanTaskEvent[]>>;
+    addEvent(input: {
+      taskId: string;
+      boardId: string;
+      eventType: KanbanTaskEventType;
+      fromColumnId?: string;
+      toColumnId?: string;
+      agentId?: string;
+      message?: string;
+      metadata?: Record<string, unknown>;
+    }): Promise<ApiResponse<KanbanTaskEvent>>;
   };
 
   /* ----------------------------- Events --------------------------- */

@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Sparkles,
   Circle,
+  KanbanSquare,
   type LucideIcon,
 } from 'lucide-react';
 import { useAppStore } from '../stores/app';
@@ -29,6 +30,7 @@ interface NavEntry {
 const NAV_ITEMS: NavEntry[] = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard, end: true },
   { label: 'Chat', path: '/chat', icon: MessageSquare },
+  { label: 'Kanban', path: '/kanban', icon: KanbanSquare },
   { label: 'Agents', path: '/agents', icon: Bot },
   { label: 'Teams', path: '/teams', icon: Users },
   { label: 'Skills', path: '/skills', icon: Wand2 },

@@ -192,6 +192,8 @@ async function boot(): Promise<void> {
   skillExecutor = new OrchestratorSkillExecutor({
     registry: skillRegistry,
     toolExecutionRepo: repos.toolExecutions,
+    agentsRepo: repos.agents,
+    kanbanRepo: repos.kanban,
     agentDelegate: async (targetAgentId, task, context) => {
       return orchestrator!.delegateToAgent(targetAgentId, task, {
         chatRoomId: context.chatRoomId,
