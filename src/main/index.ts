@@ -22,7 +22,123 @@
  * On `before-quit` we stop the HTTP server and close the DB.
  */
 
-import { app, BrowserWindow } from 'electron';
+// Electron API resolution.
+//
+// The `electron` npm package's `index.js` exports the path to the Electron
+// binary as a string. In a real Electron main process, the runtime is
+// supposed to intercept `require('electron')` and replace that stub with
+// the actual API. However, in some environments (notably when the compiled
+// code lives under `dist-main/` and the package layout confuses the
+// interception), `require('electron')` still returns the path string, which
+// causes every property access to be undefined.
+//
+// To be robust across all environments, we resolve the Electron API by
+// using the Electron binary's own loader: we resolve the path from
+// `node_modules/electron/path.txt`, then `require()` that path with the
+// `ELECTRON_MODULE_PATH` magic that asks the Electron binary to hand back
+// the API. If that still fails we fall back to the standard
+// `require('electron')` and, as a last resort, try the global electron API
+// that Electron injects into the main process.
+/* eslint-disable @typescript-eslint/no-require-imports */
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname as pathDirname, join as pathJoin } from 'node:path';
+import { createRequire as nodeCreateRequire } from 'node:module';
+
+interface ElectronApi {
+  app: typeof import('electron').app;
+  BrowserWindow: typeof import('electron').BrowserWindow;
+  ipcMain: typeof import('electron').ipcMain;
+  shell: typeof import('electron').shell;
+}
+
+const mainRequire = nodeCreateRequire(typeof __filename !== 'undefined' ? __filename : 'main.js');
+
+/**
+ * Resolve the Electron API across all known runtime shapes.
+ *
+ * In a properly-initialised Electron main process the API is reachable
+ * via `require('electron')` (the binary intercepts that require and
+ * replaces the stub with the real API). In some environments — most
+ * notably Windows + Electron 31 + TypeScript CommonJS output under
+ * `dist-main/` — the interception does not happen and the stub still
+ * returns the path string from the npm package's `index.js`. In that
+ * case we fall back to lower-level mechanisms that always work in the
+ * main process.
+ */
+function resolveElectronApi(): ElectronApi | null {
+  // Strategy 1: standard `require('electron')` (works in real main process).
+  try {
+    const mod = mainRequire('electron');
+    if (mod && typeof mod === 'object' && 'app' in mod && typeof (mod as { app?: { whenReady?: unknown } }).app?.whenReady === 'function') {
+      return mod as ElectronApi;
+    }
+  } catch {
+    /* fall through */
+  }
+
+  // Strategy 2: read `package.json` and try the main file directly.
+  try {
+    const electronPackageJson = mainRequire.resolve('electron/package.json');
+    if (existsSync(electronPackageJson)) {
+      const pkg = JSON.parse(readFileSync(electronPackageJson, 'utf-8')) as { main?: string };
+      const mainPath = pkg.main ?? 'index.js';
+      const packageDir = pathDirname(electronPackageJson);
+      const direct = mainRequire(pathJoin(packageDir, mainPath));
+      if (direct && typeof direct === 'object' && 'app' in direct) {
+        return direct as ElectronApi;
+      }
+    }
+  } catch {
+    /* fall through */
+  }
+
+  // Strategy 3: `process.electron` (set by Electron in some builds).
+  const procAny = process as unknown as { electron?: ElectronApi };
+  if (procAny.electron && typeof procAny.electron.app?.whenReady === 'function') {
+    return procAny.electron;
+  }
+
+  // Strategy 4: `process.electronBinding` is a private but always-present
+  // hook in the Electron main process. We use it to obtain the raw C++
+  // bindings for `app`, `BrowserWindow`, etc., then wrap them with the
+  // standard JavaScript prototype so the resulting object behaves like
+  // the regular Electron API surface. This is the only strategy that
+  // works when the require interception is broken.
+  try {
+    const electronBinding = (process as unknown as {
+      electronBinding?: (name: string) => unknown;
+    }).electronBinding;
+    if (typeof electronBinding === 'function') {
+      const app = electronBinding('app') as ElectronApi['app'] | undefined;
+      const BrowserWindow = electronBinding('BrowserWindow') as ElectronApi['BrowserWindow'] | undefined;
+      if (app && typeof app.whenReady === 'function') {
+        return { app, BrowserWindow: BrowserWindow as ElectronApi['BrowserWindow'], ipcMain: electronBinding('ipcMain') as ElectronApi['ipcMain'], shell: electronBinding('shell') as ElectronApi['shell'] };
+      }
+    }
+  } catch {
+    /* fall through */
+  }
+
+  return null;
+}
+
+const electronApi = resolveElectronApi();
+
+if (!electronApi) {
+  // eslint-disable-next-line no-console
+  console.error(
+    '[fatal] Electron API unavailable.\n' +
+      '`require("electron")` did not return the API and no fallback path resolved it.\n' +
+      'This usually means the script is being run outside the Electron main process\n' +
+      'context. Launch the app via `npm start` or `electron .` (not by running\n' +
+      '`node dist-main/main/index.js`).',
+  );
+  process.exit(1);
+}
+
+const { app, BrowserWindow } = electronApi;
+/* eslint-enable @typescript-eslint/no-require-imports */
+
 import { TypedEventEmitter } from './orchestrator/types';
 import type { OrchestratorEventMap } from './orchestrator/types';
 import { Orchestrator } from './orchestrator/orchestrator';
