@@ -96,10 +96,17 @@ function clampEventType(v: string | null | undefined, fallback: KanbanTaskEventT
 export type BoardCreateInput = Omit<KanbanBoard, 'id' | 'createdAt' | 'updatedAt'>;
 export type BoardUpdateInput = Partial<Omit<KanbanBoard, 'id' | 'createdAt' | 'updatedAt'>>;
 
-export type ColumnCreateInput = Omit<KanbanColumn, 'id' | 'createdAt' | 'boardId' | 'position'> & { position?: number };
+// `position` is required on the stored entity, but the create inputs below
+// treat it as optional — the repository assigns a default (max + 1) when
+// the caller omits it. This matches the long-standing insert behavior.
+export type ColumnCreateInput = Omit<KanbanColumn, 'id' | 'createdAt' | 'boardId' | 'position'> & {
+  position?: number;
+};
 export type ColumnUpdateInput = Partial<Omit<KanbanColumn, 'id' | 'createdAt' | 'boardId'>>;
 
-export type TaskCreateInput = Omit<KanbanTask, 'id' | 'createdAt' | 'updatedAt' | 'position'> & { position?: number };
+export type TaskCreateInput = Omit<KanbanTask, 'id' | 'createdAt' | 'updatedAt' | 'position'> & {
+  position?: number;
+};
 export type TaskUpdateInput = Partial<Omit<KanbanTask, 'id' | 'createdAt' | 'updatedAt' | 'boardId'>>;
 
 export type EventCreateInput = Omit<KanbanTaskEvent, 'id' | 'createdAt'>;

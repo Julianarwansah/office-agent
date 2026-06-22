@@ -222,6 +222,8 @@ function toRPN(tokens: Token[]): Token[] {
           found = true;
           break;
         }
+        // Commas are just argument separators — never emit them to RPN.
+        if (top.kind === 'op' && top.value === ',') continue;
         output.push(top);
       }
       if (!found) throw new Error('Mismatched parentheses');

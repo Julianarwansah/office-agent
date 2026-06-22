@@ -115,14 +115,13 @@ export function registerKanbanHandlers(deps: KanbanHandlerDeps): void {
       if (!input?.boardId) return fail('boardId is required');
       if (!input.name || typeof input.name !== 'string') return fail('name is required');
       const status = clampStatus(input.status, 'todo');
-      const createInput: Parameters<typeof repo.createColumn>[0] = {
+      const created = repo.createColumn({
         boardId: input.boardId,
         name: String(input.name).trim(),
         status,
-      };
-      if (typeof input.position === 'number') createInput.position = input.position;
-      if (typeof input.wipLimit === 'number') createInput.wipLimit = input.wipLimit;
-      const created = repo.createColumn(createInput);
+        position: typeof input.position === 'number' ? input.position : undefined,
+        wipLimit: typeof input.wipLimit === 'number' ? input.wipLimit : undefined,
+      });
       return ok(created);
     } catch (err) { return failErr('KANBAN.CREATE_COLUMN', err); }
   });
@@ -305,7 +304,9 @@ function sanitizeColumnInput(partial: Partial<KanbanColumn> | undefined): Column
   if (partial.name !== undefined) out.name = String(partial.name);
   if (partial.position !== undefined && typeof partial.position === 'number') out.position = partial.position;
   if (partial.status !== undefined) out.status = clampStatus(partial.status, 'todo');
-  if (partial.wipLimit !== undefined) out.wipLimit = typeof partial.wipLimit === 'number' ? partial.wipLimit : undefined;
+  if (partial.wipLimit !== undefined) {
+    out.wipLimit = typeof partial.wipLimit === 'number' ? partial.wipLimit : undefined;
+  }
   return out;
 }
 
@@ -313,15 +314,17 @@ function sanitizeTaskInput(partial: Partial<KanbanTask> | undefined): TaskUpdate
   if (!partial) return {};
   const out: TaskUpdateInput = {};
   if (partial.title !== undefined) out.title = String(partial.title);
-  if (partial.description !== undefined) out.description = partial.description ?? undefined;
+  if (partial.description !== undefined) out.description = partial.description;
   if (partial.status !== undefined) out.status = clampStatus(partial.status, 'todo');
   if (partial.priority !== undefined) out.priority = clampPriority(partial.priority, 'medium');
-  if (partial.assigneeAgentId !== undefined) out.assigneeAgentId = partial.assigneeAgentId ?? undefined;
-  if (partial.creatorAgentId !== undefined) out.creatorAgentId = partial.creatorAgentId ?? undefined;
-  if (partial.dueDate !== undefined) out.dueDate = typeof partial.dueDate === 'number' ? partial.dueDate : undefined;
-  if (partial.parentTaskId !== undefined) out.parentTaskId = partial.parentTaskId ?? undefined;
+  if (partial.assigneeAgentId !== undefined) out.assigneeAgentId = partial.assigneeAgentId;
+  if (partial.creatorAgentId !== undefined) out.creatorAgentId = partial.creatorAgentId;
+  if (partial.dueDate !== undefined) {
+    out.dueDate = typeof partial.dueDate === 'number' ? partial.dueDate : undefined;
+  }
+  if (partial.parentTaskId !== undefined) out.parentTaskId = partial.parentTaskId;
   if (partial.tags !== undefined) {
-    out.tags = Array.isArray(partial.tags) ? partial.tags.filter((t) => typeof t === 'string') : [];
+    out.tags = Array.isArray(partial.tags) ? partial.tags.filter((t) => typeof t === 'string') : undefined;
   }
   return out;
 }

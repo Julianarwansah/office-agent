@@ -439,6 +439,8 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
   const moveTask = useKanbanStore((s) => s.moveTask);
   const deleteTask = useKanbanStore((s) => s.deleteTask);
 
+  const agentsList = useMemo(() => Array.from(agentsById.values()), [agentsById]);
+
   const [editingTask, setEditingTask] = useState<KanbanTask | null>(null);
   const [creatingForColumn, setCreatingForColumn] = useState<string | null>(null);
   const [addingColumn, setAddingColumn] = useState(false);
@@ -591,14 +593,19 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
         }}
       />
 
-      <ColumnEditor
+<ColumnEditor
         column={editingColumn}
         boardId={board.id}
         open={!!editingColumn}
         onClose={() => setEditingColumn(null)}
         onSave={async (data) => {
           if (editingColumn) {
-            await updateColumn(editingColumn.id, data);
+            await updateColumn(editingColumn.id, {
+              name: data.name,
+              status: data.status,
+              position: data.position,
+              wipLimit: data.wipLimit ?? undefined,
+            });
           }
         }}
       />
@@ -609,7 +616,13 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
         open={addingColumn}
         onClose={() => setAddingColumn(false)}
         onSave={async (data) => {
-          await createColumn({ boardId: board.id, name: data.name ?? '', status: data.status, position: data.position, wipLimit: data.wipLimit });
+          await createColumn({
+            boardId: board.id,
+            name: data.name ?? '',
+            status: data.status,
+            position: data.position,
+            wipLimit: data.wipLimit ?? undefined,
+          });
         }}
       />
 
@@ -617,13 +630,18 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
         task={editingTask}
         boardId={board.id}
         defaultColumnId={creatingForColumn ?? undefined}
-        agents={agents}
+        agents={agentsList}
         onClose={() => { setEditingTask(null); setCreatingForColumn(null); }}
         onSave={async (data) => {
           if (editingTask) {
             await updateTask(editingTask.id, data);
           } else {
-            await createTask({ ...data, boardId: board.id, title: data.title ?? 'Untitled' });
+            await createTask({
+              ...data,
+              boardId: board.id,
+              title: data.title ?? 'Untitled',
+              columnId: data.columnId ?? creatingForColumn ?? '',
+            });
           }
         }}
       />
@@ -632,7 +650,62 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
         open={aiPlanOpen}
         onClose={() => setAiPlanOpen(false)}
         board={board}
-        agents={agents}
+        agents={agentsList}
+        onComplete={async () => {
+          await handleRefresh();
+        }}
+      />
+
+      <ColumnEditor
+        column={null}
+        boardId={board.id}
+        open={addingColumn}
+        onClose={() => setAddingColumn(false)}
+        onSave={async (data) => {
+          await createColumn({
+            boardId: board.id,
+            name: data.name ?? '',
+            status: data.status,
+            position: data.position,
+            wipLimit: typeof data.wipLimit === 'number' ? data.wipLimit : undefined,
+          });
+        }}
+      />
+
+      <TaskEditor
+        task={editingTask}
+        boardId={board.id}
+        defaultColumnId={creatingForColumn ?? undefined}
+        agents={agentsList}
+        onClose={() => { setEditingTask(null); setCreatingForColumn(null); }}
+        onSave={async (data) => {
+          if (editingTask) {
+            await updateTask(editingTask.id, {
+              title: data.title,
+              description: data.description,
+              columnId: data.columnId ?? editingTask.columnId,
+              priority: data.priority,
+              status: data.status,
+              assigneeAgentId: data.assigneeAgentId,
+              tags: data.tags,
+              dueDate: data.dueDate,
+            });
+          } else {
+            await createTask({
+              ...data,
+              boardId: board.id,
+              title: data.title ?? 'Untitled',
+              columnId: data.columnId ?? columns[0]?.id ?? '',
+            });
+          }
+        }}
+      />
+
+      <AiPlanModal
+        open={aiPlanOpen}
+        onClose={() => setAiPlanOpen(false)}
+        board={board}
+        agents={agentsList}
         onComplete={async () => {
           await handleRefresh();
         }}

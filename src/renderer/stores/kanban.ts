@@ -6,6 +6,7 @@ import type {
   KanbanTaskEvent,
 } from '../../shared/types';
 import { api, unwrap } from '../lib/api';
+import type { OfficeAPI } from '../../preload/api';
 
 export interface KanbanStoreState {
   boards: KanbanBoard[];

@@ -12,9 +12,8 @@ import { ToolExecutionRepository, toolExecutions } from './tool-executions';
 import { SettingsRepository, settings, DEFAULT_APP_SETTINGS } from './settings';
 import { WorkspaceRepository, workspaces } from './workspaces';
 import { UserSkillRepository, userSkills } from './user-skills';
-import {
-  KanbanRepository,
-  kanban,
+import { KanbanRepository, kanban } from './kanban';
+import type {
   BoardCreateInput,
   BoardUpdateInput,
   ColumnCreateInput,
@@ -22,7 +21,44 @@ import {
   TaskCreateInput,
   TaskUpdateInput,
   EventCreateInput,
-  DEFAULT_KANBAN_COLUMNS,
+} from './kanban';
+
+export {
+  LLMProviderRepository,
+  llmProviders,
+  TeamRepository,
+  teams,
+  AgentRepository,
+  agents,
+  ChatRoomRepository,
+  chatrooms,
+  MessageRepository,
+  messages,
+  MemoryRepository,
+  memories,
+  ConversationSummaryRepository,
+  summaries,
+  ToolExecutionRepository,
+  toolExecutions,
+  SettingsRepository,
+  settings,
+  DEFAULT_APP_SETTINGS,
+  WorkspaceRepository,
+  workspaces,
+  UserSkillRepository,
+  userSkills,
+  KanbanRepository,
+  kanban,
+};
+
+export type {
+  BoardCreateInput,
+  BoardUpdateInput,
+  ColumnCreateInput,
+  ColumnUpdateInput,
+  TaskCreateInput,
+  TaskUpdateInput,
+  EventCreateInput,
 };
 
 export interface Repositories {

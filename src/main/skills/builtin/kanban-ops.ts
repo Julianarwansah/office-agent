@@ -21,7 +21,6 @@ import type {
   KanbanTaskStatus,
 } from '../../../shared/types';
 import type { SkillManifest, SkillExample } from '../../../shared/skills-schema';
-import type { SkillExample } from '../../../shared/skills-schema';
 
 type KanbanOp =
   | 'list_boards'
