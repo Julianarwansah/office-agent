@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
 import { cn } from '../../lib/utils';
 
 export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
@@ -11,7 +11,8 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, hint, value, onChange, type = 'text', className, id, ...rest }, ref) => {
-    const inputId = id ?? `input-${Math.random().toString(36).slice(2, 9)}`;
+    const generatedId = useId();
+    const inputId = id ?? generatedId;
     return (
       <div className="w-full">
         {label && (
@@ -53,7 +54,8 @@ export interface TextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTex
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, hint, value, onChange, className, id, ...rest }, ref) => {
-    const inputId = id ?? `ta-${Math.random().toString(36).slice(2, 9)}`;
+    const generatedId = useId();
+    const inputId = id ?? generatedId;
     return (
       <div className="w-full">
         {label && (
@@ -105,7 +107,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     { label, error, hint, value, onChange, options, placeholder, className, id, ...rest },
     ref,
   ) => {
-    const selectId = id ?? `sel-${Math.random().toString(36).slice(2, 9)}`;
+    const generatedId = useId();
+    const selectId = id ?? generatedId;
     return (
       <div className="w-full">
         {label && (

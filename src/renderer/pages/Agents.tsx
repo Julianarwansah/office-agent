@@ -99,8 +99,8 @@ const AgentsPage: React.FC = () => {
 
   async function handleStartChat(agent: Agent) {
     try {
-      const chatroom = await getOrCreateDirect(agent.id);
-      navigate(`/chat/${chatroom.id}`);
+      await getOrCreateDirect(agent.id);
+      navigate(`/agent-chat/${agent.id}`);
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Failed to start chat.');
     }

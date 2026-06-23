@@ -30,7 +30,7 @@ interface NavEntry {
 
 const NAV_ITEMS: NavEntry[] = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard, end: true },
-  { label: 'Chatrooms', path: '/chat', icon: MessageSquare },
+  { label: 'Chatgrub', path: '/chat', icon: MessageSquare },
   { label: 'Chat Agent', path: '/agent-chat', icon: MessageCircle },
   { label: 'Kanban', path: '/kanban', icon: KanbanSquare },
   { label: 'Agents', path: '/agents', icon: Bot },

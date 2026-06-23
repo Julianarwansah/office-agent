@@ -70,6 +70,19 @@ export function registerMessageHandlers(deps: MessageHandlerDeps): void {
     }
   });
 
+  ipcMain.handle(IPC_CHANNELS.MESSAGE.CLEAR, async (
+    _evt,
+    args: { chatRoomId: string },
+  ): Promise<ApiResponse<number>> => {
+    try {
+      if (!args?.chatRoomId) return fail('chatRoomId is required');
+      const count = repo.deleteByChatRoom(String(args.chatRoomId));
+      return ok(count);
+    } catch (err) {
+      return failErr('MESSAGE.CLEAR', err);
+    }
+  });
+
   ipcMain.handle(IPC_CHANNELS.MESSAGE.SEARCH, async (
     _evt,
     args: { chatRoomId: string; query: string },

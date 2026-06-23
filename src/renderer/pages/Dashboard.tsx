@@ -69,7 +69,7 @@ const Dashboard: React.FC = () => {
       link: '/teams',
     },
     {
-      label: 'Chatrooms',
+      label: 'Chatgrub',
       value: chatrooms.length,
       icon: MessageSquare,
       gradient: 'from-blue-500 to-cyan-500',
@@ -265,12 +265,12 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Recent chatrooms */}
+      {/* Recent chatgrub */}
       <div className="card overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-200/60 px-5 py-4 dark:border-slate-800/60">
           <div className="flex items-center gap-2">
             <Clock size={16} className="text-slate-400" />
-            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Recent chatrooms</h2>
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Recent chatgrub</h2>
           </div>
           <Link
             to="/chat"
@@ -285,9 +285,9 @@ const Dashboard: React.FC = () => {
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-100 to-purple-100 dark:from-primary-900/30 dark:to-purple-900/30">
               <MessageSquare className="text-primary-500" size={28} />
             </div>
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">No chatrooms yet</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">No chatgrub yet</p>
             <p className="mt-1 max-w-sm text-xs text-slate-500">
-              Create your first chatroom and start talking to your agents.
+              Create your first chatgrub and start talking to your agents.
             </p>
             <button onClick={() => navigate('/chat')} className="btn-primary mt-4">
               <Plus size={14} />
@@ -328,7 +328,7 @@ const Dashboard: React.FC = () => {
 
       <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
         <TrendingUp size={12} />
-        <span>Memory system tracks {totals.messages} messages across {chatrooms.length} chatrooms</span>
+        <span>Memory system tracks {totals.messages} messages across {chatrooms.length} chatgrub</span>
       </div>
     </div>
   );

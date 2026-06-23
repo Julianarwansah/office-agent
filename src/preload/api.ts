@@ -273,13 +273,14 @@ export interface OfficeAPI {
     get(id: string): Promise<ApiResponse<Message | null>>;
     create(input: Partial<Message>): Promise<ApiResponse<Message>>;
     delete(id: string): Promise<ApiResponse<boolean>>;
+    clear(args: { chatRoomId: string }): Promise<ApiResponse<number>>;
     search(args: { chatRoomId: string; query: string }): Promise<ApiResponse<Message[]>>;
   };
 
   /* ----------------------------- Chat ----------------------------- */
   chat: {
-    send(args: ChatSendArgs): Promise<ApiResponse<void>>;
-    stream(args: ChatSendArgs): Promise<ApiResponse<{ messageId: string }>>;
+    send(args: ChatSendArgs): Promise<ApiResponse<Message>>;
+    stream(args: ChatSendArgs): Promise<ApiResponse<Message>>;
     cancel(): Promise<ApiResponse<void>>;
   };
 

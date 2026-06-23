@@ -15,7 +15,7 @@ import type { AppTheme } from '../../shared/types';
 
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/': { title: 'Dashboard', subtitle: 'Workspace overview' },
-  '/chat': { title: 'Chat', subtitle: 'Conversations with your agents' },
+  '/agent-chat': { title: 'Chat Agent', subtitle: 'Private 1:1 conversations' },
   '/agents': { title: 'Agents', subtitle: 'AI personas & skills' },
   '/teams': { title: 'Teams', subtitle: 'Groups of collaborating agents' },
   '/skills': { title: 'Skills', subtitle: 'Tool catalog' },
@@ -25,7 +25,12 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
 };
 
 function getPageMeta(pathname: string): { title: string; subtitle?: string } {
-  if (pathname.startsWith('/chat')) return { title: 'Chat', subtitle: 'Conversations with your agents' };
+  if (pathname.startsWith('/agent-chat')) {
+    return PAGE_TITLES['/agent-chat'];
+  }
+  if (pathname.startsWith('/chat')) {
+    return { title: 'Chatgrub', subtitle: 'Multi-agent team rooms' };
+  }
   for (const key of Object.keys(PAGE_TITLES)) {
     if (key === '/' ? pathname === '/' : pathname.startsWith(key)) {
       return PAGE_TITLES[key];

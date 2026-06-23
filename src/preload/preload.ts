@@ -235,6 +235,9 @@ const officeAPI: OfficeAPI = {
     delete(id) {
       return invoke<boolean>(IPC_CHANNELS.MESSAGE.DELETE, id);
     },
+    clear(args) {
+      return invoke<number>(IPC_CHANNELS.MESSAGE.CLEAR, args);
+    },
     search(args) {
       return invoke<Message[]>(IPC_CHANNELS.MESSAGE.SEARCH, args);
     },
@@ -243,10 +246,10 @@ const officeAPI: OfficeAPI = {
   /* ----------------------------- Chat ----------------------------- */
   chat: {
     send(args: ChatSendArgs) {
-      return invoke<void>(IPC_CHANNELS.CHAT.SEND, args);
+      return invoke<Message>(IPC_CHANNELS.CHAT.SEND, args);
     },
     stream(args: ChatSendArgs) {
-      return invoke<{ messageId: string }>(IPC_CHANNELS.CHAT.STREAM, args);
+      return invoke<Message>(IPC_CHANNELS.CHAT.STREAM, args);
     },
     cancel() {
       return invoke<void>(IPC_CHANNELS.CHAT.CANCEL);

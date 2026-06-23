@@ -22,16 +22,17 @@ import type { ChatRoomFormData } from '../lib/types';
 import { cn, formatRelative, getInitial } from '../lib/utils';
 
 const TYPE_OPTIONS: Array<{ value: ChatRoomType; label: string }> = [
-  { value: 'direct', label: 'Direct — 1:1 with an agent' },
-  { value: 'team', label: 'Team — multiple agents collaborating' },
-  { value: 'global', label: 'Global — all available agents' },
+  { value: 'direct', label: 'Direct - 1:1 with an agent' },
+  { value: 'team', label: 'Team - multiple agents collaborating' },
+  { value: 'global', label: 'Global - all available agents' },
 ];
 
 const ChatRoomPage: React.FC = () => {
   const navigate = useNavigate();
   const { chatRoomId } = useParams<{ chatRoomId?: string }>();
 
-  const chatrooms = useChatRoomsStore((s) => s.chatrooms);
+  const allChatrooms = useChatRoomsStore((s) => s.chatrooms);
+  const chatrooms = allChatrooms.filter((c) => c.type !== 'direct');
   const currentChatRoomId = useChatRoomsStore((s) => s.currentChatRoomId);
   const setCurrentChatRoom = useChatRoomsStore((s) => s.setCurrentChatRoom);
   const messagesByRoom = useChatRoomsStore((s) => s.messagesByRoom);
@@ -42,8 +43,15 @@ const ChatRoomPage: React.FC = () => {
   const cancelStream = useChatRoomsStore((s) => s.cancelStream);
   const createChatRoom = useChatRoomsStore((s) => s.createChatRoom);
   const deleteChatRoom = useChatRoomsStore((s) => s.deleteChatRoom);
+  const loadChatrooms = useChatRoomsStore((s) => s.loadChatrooms);
+  const chatroomsLoading = useChatRoomsStore((s) => s.loading);
+  const chatroomsError = useChatRoomsStore((s) => s.error);
+  const loadMessagesError = useChatRoomsStore((s) => s.loadMessagesError);
 
   const agents = useAgentsStore((s) => s.agents);
+  const loadAgents = useAgentsStore((s) => s.loadAgents);
+  const agentsLoading = useAgentsStore((s) => s.loadingAgents);
+  const agentsError = useAgentsStore((s) => s.error);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(true);
@@ -51,14 +59,24 @@ const ChatRoomPage: React.FC = () => {
   const effectiveId = chatRoomId ?? currentChatRoomId ?? null;
 
   useEffect(() => {
-    if (chatRoomId) setCurrentChatRoom(chatRoomId);
-  }, [chatRoomId, setCurrentChatRoom]);
+    void loadChatrooms();
+    void loadAgents();
+  }, [loadChatrooms, loadAgents]);
 
   useEffect(() => {
-    if (effectiveId && !messagesByRoom[effectiveId]) {
-      void useChatRoomsStore.getState().loadMessages(effectiveId);
+    if (chatRoomId) {
+      setCurrentChatRoom(chatRoomId);
+      useChatRoomsStore.setState({ sendError: null, loadMessagesError: null });
     }
-  }, [effectiveId, messagesByRoom]);
+  }, [chatRoomId, setCurrentChatRoom]);
+
+  const loadedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!effectiveId) return;
+    if (loadedRef.current.has(effectiveId)) return;
+    loadedRef.current.add(effectiveId);
+    void useChatRoomsStore.getState().loadMessages(effectiveId);
+  }, [effectiveId]);
 
   const activeChatroom = useMemo(
     () => chatrooms.find((c) => c.id === effectiveId) ?? null,
@@ -76,10 +94,17 @@ const ChatRoomPage: React.FC = () => {
   }, [agents]);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const lastContentSig = useRef<string>('');
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollTop = el.scrollHeight;
+    const sig = `${activeMessages.length}|${activeStreaming.length}|${activeStreaming.map((s) => s.content).join('|')}`;
+    if (sig === lastContentSig.current) return;
+    lastContentSig.current = sig;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom < 120) {
+      el.scrollTop = el.scrollHeight;
+    }
   }, [activeMessages.length, activeStreaming.length, activeStreaming.map((s) => s.content).join('|')]);
 
   async function handleSend(text: string, mentionedAgentIds: string[]) {
@@ -102,7 +127,7 @@ const ChatRoomPage: React.FC = () => {
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm('Delete this chatroom? This will remove all messages.')) return;
+    if (!window.confirm('Delete this chatgrub? This will remove all messages.')) return;
     await deleteChatRoom(id);
     navigate('/chat');
   }
@@ -111,23 +136,39 @@ const ChatRoomPage: React.FC = () => {
     <div className="flex h-full -m-6 overflow-hidden">
       <aside className="flex w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
         <div className="flex items-center justify-between border-b border-slate-200 px-3 py-3 dark:border-slate-700">
-          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Chatrooms</h2>
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Chatgrub</h2>
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
             className="rounded-md bg-primary-50 p-1.5 text-primary-600 transition-colors hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50"
-            title="New chatroom"
+            title="New chatgrub"
           >
             <Plus size={14} />
           </button>
         </div>
+        {(chatroomsError || agentsError) && (
+          <div className="flex items-start gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
+            <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" />
+            <span>
+              {chatroomsError ? `Chatgrub: ${chatroomsError}` : ''}
+              {chatroomsError && agentsError ? ' · ' : ''}
+              {agentsError ? `Agents: ${agentsError}` : ''}
+            </span>
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto scrollbar-thin">
-          {chatrooms.length === 0 ? (
+          {chatroomsLoading && chatrooms.length === 0 ? (
+            <div className="space-y-2 px-3 py-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-10 rounded bg-slate-100 dark:bg-slate-700/40 shimmer" />
+              ))}
+            </div>
+          ) : chatrooms.length === 0 ? (
             <div className="flex flex-col items-center px-4 py-8 text-center">
               <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-100 to-purple-100 dark:from-primary-900/30 dark:to-purple-900/30">
                 <MessageSquare className="text-primary-500" size={20} />
               </div>
-              <p className="text-xs font-medium text-slate-600 dark:text-slate-300">No chatrooms yet</p>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-300">No chatgrub yet</p>
               <button
                 type="button"
                 onClick={() => setCreateOpen(true)}
@@ -201,7 +242,7 @@ const ChatRoomPage: React.FC = () => {
                   type="button"
                   onClick={() => handleDelete(activeChatroom.id)}
                   className="rounded p-1.5 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
-                  title="Delete chatroom"
+                  title="Delete chatgrub"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -212,6 +253,12 @@ const ChatRoomPage: React.FC = () => {
               <div className="mx-auto flex max-w-3xl flex-col gap-4">
                 {loadingMessages && activeMessages.length === 0 && (
                   <p className="text-center text-xs text-slate-500">Loading messages…</p>
+                )}
+                {loadMessagesError && activeMessages.length === 0 && !loadingMessages && (
+                  <div className="flex items-center gap-2 self-center rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-300">
+                    <AlertTriangle size={14} />
+                    Failed to load messages: {loadMessagesError}
+                  </div>
                 )}
                 {!loadingMessages && activeMessages.length === 0 && activeStreaming.length === 0 && (
                   <div className="my-16 flex flex-col items-center text-center">
@@ -353,14 +400,14 @@ const EmptyChat: React.FC<{ onCreate: () => void }> = ({ onCreate }) => (
       </div>
     </div>
     <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-      Select a chatroom
+      Select a chatgrub
     </h2>
     <p className="mt-2 max-w-sm text-sm text-slate-500">
-      Pick a chatroom from the left sidebar or create a new one to start chatting with your agents.
+      Pick a chatgrub from the left sidebar or create a new one to start chatting with your agents.
     </p>
     <div className="mt-6 flex gap-2">
       <Button variant="primary" onClick={onCreate} leftIcon={<Plus size={16} />}>
-        New chatroom
+        New chatgrub
       </Button>
     </div>
     <div className="mt-10 grid max-w-md grid-cols-3 gap-3 text-center">
@@ -386,6 +433,7 @@ interface CreateChatRoomModalProps {
 
 const CreateChatRoomModal: React.FC<CreateChatRoomModalProps> = ({ open, onClose, onSave }) => {
   const agents = useAgentsStore((s) => s.agents);
+  const agentsLoading = useAgentsStore((s) => s.loadingAgents);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<ChatRoomType>('team');
@@ -403,8 +451,21 @@ const CreateChatRoomModal: React.FC<CreateChatRoomModalProps> = ({ open, onClose
     }
   }, [open]);
 
+  function handleTypeChange(value: string) {
+    const nextType = value as ChatRoomType;
+    setType(nextType);
+    if (nextType === 'direct') {
+      setSelected((s) => s.slice(0, 1));
+    }
+  }
+
   function toggle(id: string) {
-    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+    setSelected((s) => {
+      if (type === 'direct') {
+        return s.includes(id) ? [] : [id];
+      }
+      return s.includes(id) ? s.filter((x) => x !== id) : [...s, id];
+    });
   }
 
   async function submit(e: React.FormEvent) {
@@ -418,6 +479,10 @@ const CreateChatRoomModal: React.FC<CreateChatRoomModalProps> = ({ open, onClose
       setError('Please select at least one agent.');
       return;
     }
+    if (type === 'direct' && selected.length !== 1) {
+      setError('Direct chatgrub requires exactly one agent.');
+      return;
+    }
     setSubmitting(true);
     try {
       await onSave({
@@ -427,7 +492,7 @@ const CreateChatRoomModal: React.FC<CreateChatRoomModalProps> = ({ open, onClose
         agentIds: selected,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create chatroom');
+      setError(err instanceof Error ? err.message : 'Failed to create chatgrub');
     } finally {
       setSubmitting(false);
     }
@@ -437,7 +502,7 @@ const CreateChatRoomModal: React.FC<CreateChatRoomModalProps> = ({ open, onClose
     <Modal
       open={open}
       onClose={onClose}
-      title="New Chatroom"
+      title="New Chatgrub"
       size="lg"
       footer={
         <>
@@ -479,7 +544,7 @@ const CreateChatRoomModal: React.FC<CreateChatRoomModalProps> = ({ open, onClose
         <Select
           label="Type"
           value={type}
-          onChange={(v) => setType(v as ChatRoomType)}
+          onChange={handleTypeChange}
           options={TYPE_OPTIONS}
         />
         {type !== 'global' && (
@@ -487,7 +552,9 @@ const CreateChatRoomModal: React.FC<CreateChatRoomModalProps> = ({ open, onClose
             <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
               Agents ({selected.length})
             </label>
-            {agents.length === 0 ? (
+            {agentsLoading && agents.length === 0 ? (
+              <p className="text-xs text-slate-500">Loading agents…</p>
+            ) : agents.length === 0 ? (
               <p className="text-xs text-slate-500">No agents available. Create one first.</p>
             ) : (
               <div className="grid max-h-56 grid-cols-1 gap-1.5 overflow-y-auto rounded border border-slate-200 p-2 dark:border-slate-700 sm:grid-cols-2">

@@ -39,8 +39,8 @@ import type {
   SkillExecutionResult,
 } from './types';
 
-const DEFAULT_HISTORY_LIMIT = 20;
-const DEFAULT_MEMORY_LIMIT = 10;
+const DEFAULT_HISTORY_LIMIT = 10;
+const DEFAULT_MEMORY_LIMIT = 5;
 const MAX_TOOL_ITERATIONS = 8;
 
 interface ChatClient {

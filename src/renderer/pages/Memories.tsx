@@ -131,7 +131,7 @@ const MemoriesPage: React.FC = () => {
       const chatroom = chatrooms.find((c) => c.type === 'direct' && c.agentIds.includes(agent.id))
         ?? chatrooms.find((c) => c.agentIds.includes(agent.id));
       if (!chatroom) {
-        alert('Pilih agent yang sudah punya chatroom untuk konsolidasi.');
+        alert('Pilih agent yang sudah punya chatgrub untuk konsolidasi.');
         return;
       }
       await consolidateMemories(selectedAgentId, chatroom.id);

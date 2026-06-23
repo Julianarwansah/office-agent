@@ -40,7 +40,10 @@ export function registerChatRoomHandlers(deps: ChatRoomHandlerDeps): void {
 
   ipcMain.handle(IPC_CHANNELS.CHATROOM.CREATE, async (_evt, input: Partial<ChatRoom>): Promise<ApiResponse<ChatRoom>> => {
     try {
-      const created = repo.create(sanitizeChatRoomInput(input));
+      const sanitized = sanitizeChatRoomInput(input);
+      const validationError = validateChatRoomAgents(sanitized.type ?? 'team', sanitized.agentIds ?? [], deps);
+      if (validationError) return fail(validationError);
+      const created = repo.create(sanitized);
       return ok(created);
     } catch (err) {
       return failErr('CHATROOM.CREATE', err);
@@ -54,7 +57,14 @@ export function registerChatRoomHandlers(deps: ChatRoomHandlerDeps): void {
   ): Promise<ApiResponse<ChatRoom | null>> => {
     try {
       if (!id || typeof id !== 'string') return fail('id is required');
-      const updated = repo.update(id, sanitizeChatRoomUpdate(partial));
+      const existing = repo.findById(id);
+      if (!existing) return ok(null);
+      const sanitized = sanitizeChatRoomUpdate(partial);
+      const nextType = sanitized.type ?? existing.type;
+      const nextAgentIds = sanitized.agentIds ?? existing.agentIds;
+      const validationError = validateChatRoomAgents(nextType, nextAgentIds, deps);
+      if (validationError) return fail(validationError);
+      const updated = repo.update(id, sanitized);
       return ok(updated);
     } catch (err) {
       return failErr('CHATROOM.UPDATE', err);
@@ -76,8 +86,14 @@ export function registerChatRoomHandlers(deps: ChatRoomHandlerDeps): void {
   ): Promise<ApiResponse<boolean>> => {
     try {
       if (!args?.chatRoomId || !args?.agentId) return fail('chatRoomId and agentId are required');
-      repo.addAgent(args.chatRoomId, args.agentId);
-      return ok(true);
+      const room = repo.findById(args.chatRoomId);
+      if (!room) return fail(`Chatgrub not found: ${args.chatRoomId}`);
+      if (room.type === 'global') return fail('Global chatgrub membership is dynamic');
+      if (deps.agents && !deps.agents.findById(args.agentId)) return fail(`Agent not found: ${args.agentId}`);
+      if (room.type === 'direct' && !room.agentIds.includes(args.agentId) && room.agentIds.length >= 1) {
+        return fail('Direct chatgrub requires exactly one agent');
+      }
+      return ok(repo.addAgent(args.chatRoomId, args.agentId));
     } catch (err) {
       return failErr('CHATROOM.ADD_AGENT', err);
     }
@@ -89,8 +105,13 @@ export function registerChatRoomHandlers(deps: ChatRoomHandlerDeps): void {
   ): Promise<ApiResponse<boolean>> => {
     try {
       if (!args?.chatRoomId || !args?.agentId) return fail('chatRoomId and agentId are required');
-      repo.removeAgent(args.chatRoomId, args.agentId);
-      return ok(true);
+      const room = repo.findById(args.chatRoomId);
+      if (!room) return fail(`Chatgrub not found: ${args.chatRoomId}`);
+      if (room.type === 'global') return fail('Global chatgrub membership is dynamic');
+      if (room.type === 'direct' && room.agentIds.includes(args.agentId)) {
+        return fail('Direct chatgrub requires exactly one agent');
+      }
+      return ok(repo.removeAgent(args.chatRoomId, args.agentId));
     } catch (err) {
       return failErr('CHATROOM.REMOVE_AGENT', err);
     }
@@ -104,8 +125,13 @@ export function registerChatRoomHandlers(deps: ChatRoomHandlerDeps): void {
       if (!args?.chatRoomId || !Array.isArray(args.agentIds)) {
         return fail('chatRoomId and agentIds[] are required');
       }
-      repo.setAgents(args.chatRoomId, args.agentIds.map((id) => String(id)));
-      return ok(true);
+      const room = repo.findById(args.chatRoomId);
+      if (!room) return fail(`Chatgrub not found: ${args.chatRoomId}`);
+      if (room.type === 'global') return fail('Global chatgrub membership is dynamic');
+      const agentIds = uniqueIds(args.agentIds);
+      const validationError = validateChatRoomAgents(room.type, agentIds, deps);
+      if (validationError) return fail(validationError);
+      return ok(repo.setAgents(args.chatRoomId, agentIds));
     } catch (err) {
       return failErr('CHATROOM.SET_AGENTS', err);
     }
@@ -122,7 +148,7 @@ export function registerChatRoomHandlers(deps: ChatRoomHandlerDeps): void {
       const agentId = String(args.agentId);
 
       if (!deps.agents) {
-        return fail('AgentRepository is not available to resolve agent for direct chatroom');
+        return fail('AgentRepository is not available to resolve agent for direct chatgrub');
       }
       const agent = deps.agents.findById(agentId);
       if (!agent) return fail(`Agent not found: ${agentId}`);
@@ -151,12 +177,13 @@ function sanitizeChatRoomInput(input: Partial<ChatRoom> | undefined): import('..
   const type: ChatRoomType = allowed.includes(input.type as ChatRoomType)
     ? (input.type as ChatRoomType)
     : 'team';
+  const agentIds = uniqueIds(input.agentIds);
   return {
     name: String(input.name ?? 'Untitled'),
     description: input.description ?? undefined,
     teamId: input.teamId ?? undefined,
     type,
-    agentIds: Array.isArray(input.agentIds) ? input.agentIds.map((id) => String(id)) : undefined,
+    agentIds: type === 'global' ? undefined : agentIds,
   };
 }
 
@@ -171,9 +198,30 @@ function sanitizeChatRoomUpdate(input: Partial<ChatRoom> | undefined): import('.
     out.type = allowed.includes(input.type as ChatRoomType) ? (input.type as ChatRoomType) : 'team';
   }
   if (Array.isArray(input.agentIds)) {
-    out.agentIds = input.agentIds.map((id) => String(id));
+    out.agentIds = out.type === 'global' ? [] : uniqueIds(input.agentIds);
   }
   return out;
+}
+
+function uniqueIds(ids: unknown): string[] {
+  if (!Array.isArray(ids)) return [];
+  return [...new Set(ids.map((id) => String(id)).filter(Boolean))];
+}
+
+function validateChatRoomAgents(
+  type: ChatRoomType,
+  agentIds: string[],
+  deps: ChatRoomHandlerDeps,
+): string | null {
+  if (type === 'global') return null;
+  if (type === 'direct' && agentIds.length !== 1) {
+    return 'Direct chatgrub requires exactly one agent';
+  }
+  if (deps.agents) {
+    const missing = agentIds.find((id) => !deps.agents?.findById(id));
+    if (missing) return `Agent not found: ${missing}`;
+  }
+  return null;
 }
 
 function failErr(scope: string, err: unknown): ApiResponse<never> {

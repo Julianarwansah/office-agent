@@ -130,7 +130,7 @@ export class Orchestrator {
   ): Promise<AgentRunResult[]> {
     const chatRoom = this.deps.chatrooms.findById(chatRoomId);
     if (!chatRoom) {
-      throw new Error(`Orchestrator.runTeamChat: chatroom not found: ${chatRoomId}`);
+      throw new Error(`Orchestrator.runTeamChat: chatgrub not found: ${chatRoomId}`);
     }
     const agentsInRoom = this.resolveChatRoomAgents(chatRoom);
     if (agentsInRoom.length === 0) {
@@ -319,6 +319,11 @@ const MENTION_PATTERNS: Array<(name: string) => RegExp> = [
 function detectMentionedAgents(userMessage: string, agents: Agent[]): string[] {
   const text = userMessage ?? '';
   if (!text.trim()) return [];
+
+  if (/@all\b/i.test(text)) {
+    return agents.map((a) => a.id);
+  }
+
   const lower = text.toLowerCase();
   const mentioned: string[] = [];
   for (const agent of agents) {

@@ -43,13 +43,19 @@ interface ActiveRun {
 
 let activeRun: ActiveRun | null = null;
 
+function clearActiveRun(chatRoomId: string, controller: AbortController): void {
+  if (activeRun && activeRun.chatRoomId === chatRoomId && activeRun.controller === controller) {
+    activeRun = null;
+  }
+}
+
 export function registerChatHandlers(deps: ChatHandlerDeps): void {
   const { orchestrator, messages, chatrooms, agents, window: windowManager } = deps;
 
   ipcMain.handle(IPC_CHANNELS.CHAT.SEND, async (
     _evt,
     args: { chatRoomId: string; userMessage: string; mentionedAgentIds?: string[]; agentId?: string; parentMessageId?: string },
-  ): Promise<ApiResponse<{ messageId: string }>> => {
+  ): Promise<ApiResponse<Message>> => {
     try {
       if (!args?.chatRoomId || typeof args.userMessage !== 'string') {
         return fail('chatRoomId and userMessage are required');
@@ -58,11 +64,19 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
       const userMessage = String(args.userMessage);
 
       const room = chatrooms.findById(chatRoomId);
-      if (!room) return fail(`Chatroom not found: ${chatRoomId}`);
+      if (!room) return fail(`Chatgrub not found: ${chatRoomId}`);
 
       const userMsg = insertUserMessage(messages, chatRoomId, userMessage, args.parentMessageId);
       const controller = new AbortController();
+      const previous = activeRun;
       activeRun = { controller, chatRoomId, startedAt: Date.now() };
+      if (previous) {
+        try {
+          previous.controller.abort();
+        } catch (err) {
+          log.warn('failed to abort previous run before starting new one', err);
+        }
+      }
 
       // Fire-and-forget: do not block the IPC return on the orchestrator
       // completion. Errors are surfaced via the `agent:error` event.
@@ -74,10 +88,10 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
         mentionedAgentIds: args.mentionedAgentIds,
         parentMessageId: args.parentMessageId,
         signal: controller.signal,
-        onComplete: () => clearActiveRun(chatRoomId),
+        onComplete: () => clearActiveRun(chatRoomId, controller),
       });
 
-      return ok({ messageId: userMsg.id });
+      return ok(userMsg);
     } catch (err) {
       return failErr('CHAT.SEND', err);
     }
@@ -86,7 +100,7 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
   ipcMain.handle(IPC_CHANNELS.CHAT.STREAM, async (
     _evt,
     args: { chatRoomId: string; userMessage: string; mentionedAgentIds?: string[]; agentId?: string; parentMessageId?: string },
-  ): Promise<ApiResponse<{ messageId: string }>> => {
+  ): Promise<ApiResponse<Message>> => {
     try {
       if (!args?.chatRoomId || typeof args.userMessage !== 'string') {
         return fail('chatRoomId and userMessage are required');
@@ -95,7 +109,7 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
       const userMessage = String(args.userMessage);
 
       const room: ChatRoom | null = chatrooms.findById(chatRoomId);
-      if (!room) return fail(`Chatroom not found: ${chatRoomId}`);
+      if (!room) return fail(`Chatgrub not found: ${chatRoomId}`);
 
       const userMsg = insertUserMessage(messages, chatRoomId, userMessage, args.parentMessageId);
 
@@ -112,14 +126,22 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
         ? requestedAgentId
         : mentionedAgentId || room.agentIds[0] || null;
       if (!agentId) {
-        return fail('No agents in chatroom to stream from');
+        return fail('No agents in chatgrub to stream from');
       }
       if (!agents.findById(agentId)) {
         return fail(`Agent not found: ${agentId}`);
       }
 
       const controller = new AbortController();
+      const previous = activeRun;
       activeRun = { controller, chatRoomId, startedAt: Date.now() };
+      if (previous) {
+        try {
+          previous.controller.abort();
+        } catch (err) {
+          log.warn('failed to abort previous run before starting new one', err);
+        }
+      }
 
       const onChunk = (chunk: StreamChunkPayload): void => {
         // The orchestrator already emits `agent:content` events that are
@@ -137,10 +159,10 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
           log.error('streamChat failed', err);
         })
         .finally(() => {
-          clearActiveRun(chatRoomId);
+          clearActiveRun(chatRoomId, controller);
         });
 
-      return ok({ messageId: userMsg.id });
+      return ok(userMsg);
     } catch (err) {
       return failErr('CHAT.STREAM', err);
     }
@@ -212,12 +234,6 @@ async function runTeamChatAsync(
     }
   } finally {
     opts.onComplete();
-  }
-}
-
-function clearActiveRun(chatRoomId: string): void {
-  if (activeRun && activeRun.chatRoomId === chatRoomId) {
-    activeRun = null;
   }
 }
 

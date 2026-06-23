@@ -44,6 +44,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 }) => {
   const isUser = message.senderType === 'user';
   const isSystem = message.senderType === 'system';
+  const [avatarBroken, setAvatarBroken] = React.useState(false);
+  const showAgentAvatar = !!agentAvatar && !isUser && !avatarBroken;
   const initial = useMemo(
     () => getInitial(isUser ? 'You' : agentName ?? 'A'),
     [isUser, agentName],
@@ -87,8 +89,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         style={avatarStyle}
         title={isUser ? 'You' : agentName ?? 'Agent'}
       >
-        {agentAvatar && !isUser ? (
-          <img src={agentAvatar} alt={agentName ?? 'agent'} className="h-full w-full rounded-xl object-cover" />
+        {showAgentAvatar ? (
+          <img
+            src={agentAvatar}
+            alt={agentName ?? 'agent'}
+            className="h-full w-full rounded-xl object-cover"
+            onError={() => setAvatarBroken(true)}
+          />
         ) : isUser ? (
           <User size={16} />
         ) : (

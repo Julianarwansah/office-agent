@@ -11,6 +11,7 @@ interface ChatRoomsState {
   loading: boolean;
   loadingMessages: boolean;
   error: string | null;
+  loadMessagesError: string | null;
   sendError: string | null;
   unsubscribers: Array<() => void>;
 
@@ -27,15 +28,25 @@ interface ChatRoomsState {
   appendMessage: (chatRoomId: string, msg: Message | null) => void;
 
   sendMessage: (params: ChatSendParams) => Promise<void>;
+  clearMessages: (chatRoomId: string) => Promise<void>;
   cancelStream: () => Promise<void>;
 
   clearError: () => void;
 }
 
-let activeStreamId: string | null = null;
-
-function makeStreamKey(chatRoomId: string, messageId: string): string {
-  return `${chatRoomId}:${messageId}`;
+function cleanupSubscriptions(
+  get: () => ChatRoomsState,
+  set: (partial: Partial<ChatRoomsState> | ((s: ChatRoomsState) => Partial<ChatRoomsState>)) => void,
+): void {
+  const { unsubscribers } = get();
+  for (const off of unsubscribers) {
+    try {
+      off();
+    } catch {
+      /* ignore */
+    }
+  }
+  set({ unsubscribers: [] });
 }
 
 export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
@@ -46,6 +57,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
   loading: false,
   loadingMessages: false,
   error: null,
+  loadMessagesError: null,
   sendError: null,
   unsubscribers: [],
 
@@ -58,7 +70,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
     } catch (err) {
       set({
         loading: false,
-        error: err instanceof Error ? err.message : 'Failed to load chatrooms',
+        error: err instanceof Error ? err.message : 'Failed to load chatgrub',
       });
     }
   },
@@ -79,7 +91,17 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
 
   deleteChatRoom: async (id) => {
     unwrap(await api.chatrooms.delete(id));
-    if (get().currentChatRoomId === id) set({ currentChatRoomId: null });
+    set((s) => {
+      const { [id]: _removedMessages, ...messagesByRoom } = s.messagesByRoom;
+      const { [id]: _removedStreams, ...streamingMessages } = s.streamingMessages;
+      void _removedMessages;
+      void _removedStreams;
+      return {
+        currentChatRoomId: s.currentChatRoomId === id ? null : s.currentChatRoomId,
+        messagesByRoom,
+        streamingMessages,
+      };
+    });
     await get().loadChatrooms();
   },
 
@@ -100,18 +122,19 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
   },
 
   loadMessages: async (chatRoomId) => {
-    set({ loadingMessages: true });
+    set({ loadingMessages: true, loadMessagesError: null });
     try {
       const messages = unwrap(await api.messages.list({ chatRoomId }));
       messages.sort((a, b) => a.createdAt - b.createdAt);
       set((s) => ({
         messagesByRoom: { ...s.messagesByRoom, [chatRoomId]: messages },
         loadingMessages: false,
+        loadMessagesError: null,
       }));
     } catch (err) {
       set({
         loadingMessages: false,
-        error: err instanceof Error ? err.message : 'Failed to load messages',
+        loadMessagesError: err instanceof Error ? err.message : 'Failed to load messages',
       });
     }
   },
@@ -133,7 +156,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
     const { chatRoomId, userMessage, mentionedAgentIds, agentId } = params;
     set({ sendError: null });
     try {
-      const result = unwrap(
+      const userMsg = unwrap(
         await api.chat.stream({
           chatRoomId,
           userMessage,
@@ -142,18 +165,8 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
         } as unknown as Parameters<typeof api.chat.stream>[0]),
       );
 
-      const userMsg: Message = {
-        id: result.messageId,
-        chatRoomId,
-        senderType: 'user',
-        senderId: 'user',
-        content: userMessage,
-        role: 'user',
-        createdAt: Date.now(),
-      };
       get().appendMessage(chatRoomId, userMsg);
 
-      activeStreamId = chatRoomId;
       cleanupSubscriptions(get, set);
       subscribeToEvents(get, set);
     } catch (err) {
@@ -164,35 +177,36 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
     }
   },
 
+  clearMessages: async (chatRoomId) => {
+    unwrap(await api.messages.clear({ chatRoomId }));
+    set((s) => ({
+      messagesByRoom: { ...s.messagesByRoom, [chatRoomId]: [] },
+      streamingMessages: { ...s.streamingMessages, [chatRoomId]: [] },
+    }));
+  },
+
   cancelStream: async () => {
+    const roomId = get().currentChatRoomId;
     try {
       unwrap(await api.chat.cancel());
     } catch (err) {
       console.error('Failed to cancel stream:', err);
     } finally {
-      activeStreamId = null;
       cleanupSubscriptions(get, set);
-      set((s) => ({ streamingMessages: {} }));
+      if (roomId) {
+        set((s) => {
+          const { [roomId]: _removed, ...rest } = s.streamingMessages;
+          void _removed;
+          return { streamingMessages: rest };
+        });
+      } else {
+        set({ streamingMessages: {} });
+      }
     }
   },
 
-  clearError: () => set({ error: null, sendError: null }),
+  clearError: () => set({ error: null, sendError: null, loadMessagesError: null }),
 }));
-
-function cleanupSubscriptions(
-  get: () => ChatRoomsState,
-  set: (partial: Partial<ChatRoomsState> | ((s: ChatRoomsState) => Partial<ChatRoomsState>)) => void,
-): void {
-  const { unsubscribers } = get();
-  for (const off of unsubscribers) {
-    try {
-      off();
-    } catch {
-      /* ignore */
-    }
-  }
-  set({ unsubscribers: [] });
-}
 
 function subscribeToEvents(
   get: () => ChatRoomsState,
@@ -269,7 +283,7 @@ function subscribeToEvents(
   });
 
   const offDone = api.events.onOrchestrator('agent:done', async (payload: OrchestratorEventMap['agent:done']) => {
-    const { chatRoomId, messageId, finalContent } = payload;
+    const { chatRoomId, messageId } = payload;
     set((s) => {
       const list = s.streamingMessages[chatRoomId] ?? [];
       const updated = list.filter((m) => m.messageId !== messageId);
@@ -298,9 +312,6 @@ function subscribeToEvents(
     } catch (err) {
       console.error('Failed to fetch final message:', err);
     }
-    void finalContent;
-    const key = makeStreamKey(chatRoomId, messageId);
-    void key;
   });
 
   const offError = api.events.onOrchestrator('agent:error', (payload: OrchestratorEventMap['agent:error']) => {
@@ -344,7 +355,6 @@ function subscribeToEvents(
 
   subs.push(offContent, offToolCall, offToolResult, offDone, offError, offStart);
   set({ unsubscribers: subs });
-  void activeStreamId;
 }
 
 if (typeof window !== 'undefined') {

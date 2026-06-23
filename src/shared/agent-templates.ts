@@ -76,7 +76,7 @@ export const AGENT_TEMPLATES: AgentTemplate[] = [
     name: 'Lead Orchestrator',
     emoji: '🧭',
     tagline: 'Coordinates the team and delegates tasks',
-    description: 'Acts as the supervisor in multi-agent chatrooms. Decomposes user goals, delegates to specialists, and synthesizes their outputs.',
+    description: 'Acts as the supervisor in multi-agent chatgrub. Decomposes user goals, delegates to specialists, and synthesizes their outputs.',
     category: 'leadership',
     systemPrompt: `You are the Lead Orchestrator of a multi-agent AI team.
 
