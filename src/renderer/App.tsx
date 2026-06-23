@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import ChatRoomPage from './pages/ChatRoom';
 import AgentChatsPage from './pages/AgentChats';
 import OrgChartPage from './pages/OrgChart';
+import TerminalPage from './pages/Terminal';
 import AgentsPage from './pages/Agents';
 import TeamsPage from './pages/Teams';
 import SkillsPage from './pages/Skills';
@@ -74,6 +75,7 @@ const App: React.FC = () => {
           <Route path="/memories" element={<MemoriesPage />} />
           <Route path="/workspace" element={<WorkspacePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/terminal" element={<TerminalPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AppShell>

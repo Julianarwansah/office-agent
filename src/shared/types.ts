@@ -399,11 +399,11 @@ export interface OrchestratorEventMap {
   };
   'memory:used': {
     agentId: string;
-    memories: Memory[];
+    memoryIds: string[];
   };
   'memory:created': {
     agentId: string;
-    memory: Memory;
+    memories: Memory[];
   };
 }
 

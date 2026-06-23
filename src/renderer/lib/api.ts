@@ -30,10 +30,7 @@ export function unwrap<T>(response: ApiResponse<T>): T {
   if (!response.success) {
     throw new ApiError(response.error ?? 'Unknown API error', response as ApiResponse<unknown>);
   }
-  if (response.data === undefined) {
-    throw new ApiError('API response succeeded but returned no data', response as ApiResponse<unknown>);
-  }
-  return response.data;
+  return response.data as T;
 }
 
 export function safeUnwrap<T>(response: ApiResponse<T> | null | undefined, fallback: T): T {

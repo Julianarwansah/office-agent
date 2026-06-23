@@ -71,7 +71,7 @@ const AgentTemplatePicker: React.FC<AgentTemplatePickerProps> = ({ open, onClose
       onClose={handleClose}
       title={
         <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-primary-500" />
+          <Sparkles size={16} className="text-slate-500" />
           <span>Choose an agent template</span>
         </div>
       }
@@ -189,7 +189,7 @@ const CategoryChip: React.FC<CategoryChipProps> = ({ active, onClick, emoji, lab
     className={cn(
       'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
       active
-        ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+        ? 'border-slate-500 bg-slate-100 text-slate-800 dark:bg-zinc-800 dark:text-slate-200'
         : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700',
     )}
   >
@@ -215,9 +215,9 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template, highlighted, used
       onMouseLeave={() => onHover(false)}
       className={cn(
         'group relative flex h-full flex-col items-start gap-2 rounded-lg border p-3 text-left transition-all',
-        'hover:-translate-y-0.5 hover:border-primary-400 hover:shadow-md',
+        'hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-md',
         highlighted
-          ? 'border-primary-400 shadow-md'
+          ? 'border-slate-500 shadow-md'
           : 'border-slate-200 dark:border-slate-700',
         'bg-white dark:bg-slate-800',
       )}
@@ -239,7 +239,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template, highlighted, used
               {template.name}
             </h3>
             {template.isLead && (
-              <span className="rounded bg-amber-100 px-1 py-0.5 text-[9px] font-bold uppercase text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+              <span className="rounded bg-slate-200 px-1 py-0.5 text-[9px] font-bold uppercase text-slate-600 dark:bg-zinc-700 dark:text-slate-300">
                 Lead
               </span>
             )}
@@ -280,7 +280,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template, highlighted, used
           className={cn(
             'inline-flex flex-shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
             usedCount > 0
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+              ? 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300'
               : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400',
           )}
           title={
@@ -292,7 +292,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template, highlighted, used
           <Hash size={9} />
           {usedCount === 0 ? 'unused' : `used ${usedCount}×`}
         </span>
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-primary-400">
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-slate-400">
           <Check size={12} /> Use
         </span>
       </div>

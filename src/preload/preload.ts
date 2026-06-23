@@ -159,6 +159,15 @@ const officeAPI: OfficeAPI = {
     setSkills(id, skills) {
       return invoke<Agent | null>(IPC_CHANNELS.AGENT.SET_SKILLS, id, skills);
     },
+    duplicate(id) {
+      return invoke<Agent>(IPC_CHANNELS.AGENT.DUPLICATE, id);
+    },
+    export(id) {
+      return invoke<{ json: string }>(IPC_CHANNELS.AGENT.EXPORT, id);
+    },
+    import(args) {
+      return invoke<Agent>(IPC_CHANNELS.AGENT.IMPORT, args);
+    },
   },
 
   /* ----------------------------- Teams ---------------------------- */
@@ -240,6 +249,9 @@ const officeAPI: OfficeAPI = {
     },
     search(args) {
       return invoke<Message[]>(IPC_CHANNELS.MESSAGE.SEARCH, args);
+    },
+    regenerate(args) {
+      return invoke<void>(IPC_CHANNELS.MESSAGE.REGENERATE, args);
     },
   },
 

@@ -40,9 +40,9 @@ import { cn, formatDateTime, formatRelative, getInitial } from '../lib/utils';
 
 const COLUMN_COLORS: Record<KanbanTaskStatus, string> = {
   todo: 'bg-slate-100 dark:bg-slate-800/60',
-  in_progress: 'bg-amber-100 dark:bg-amber-900/30',
-  review: 'bg-sky-100 dark:bg-sky-900/30',
-  done: 'bg-emerald-100 dark:bg-emerald-900/30',
+  in_progress: 'bg-slate-100 dark:bg-zinc-800/60',
+  review: 'bg-slate-100 dark:bg-zinc-800/60',
+  done: 'bg-slate-100 dark:bg-zinc-800/60',
   blocked: 'bg-red-100 dark:bg-red-900/30',
 };
 
@@ -140,9 +140,9 @@ interface BoardsListProps {
 }
 
 const BOARD_COLORS = [
-  '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#ef4444',
-  '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981',
-  '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#a855f7',
+  '#64748b', '#475569', '#334155', '#1e293b', '#0f172a',
+  '#6b7280', '#4b5563', '#374151', '#1f2937', '#111827',
+  '#78716c', '#57534e', '#44403c', '#292524', '#1c1917',
 ];
 
 const BoardsList: React.FC<BoardsListProps> = ({ boards, loading, onOpen, onCreate, onUpdate, onDelete }) => {
@@ -170,7 +170,7 @@ const BoardsList: React.FC<BoardsListProps> = ({ boards, loading, onOpen, onCrea
       <div className="flex items-center justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
-            <KanbanSquare className="text-primary-500" />
+            <KanbanSquare className="text-slate-500" />
             Kanban Boards
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -190,10 +190,10 @@ const BoardsList: React.FC<BoardsListProps> = ({ boards, loading, onOpen, onCrea
         </div>
       ) : boards.length === 0 ? (
         <div className="card relative overflow-hidden p-12 text-center">
-          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gradient-to-br from-primary-400/20 to-purple-400/20 blur-3xl" />
-          <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-gradient-to-br from-pink-400/20 to-amber-400/20 blur-3xl" />
+          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gradient-to-br from-slate-200/30 to-slate-300/20 blur-3xl" />
+          <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-gradient-to-br from-slate-200/20 to-slate-300/10 blur-3xl" />
           <div className="relative">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-primary-500/30 animate-float">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 text-slate-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-400 animate-float">
               <KanbanSquare size={36} strokeWidth={2} />
             </div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No boards yet</h2>
@@ -254,7 +254,7 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onOpen, onEdit, onDelete }
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
       className="card group relative flex flex-col overflow-hidden text-left transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
     >
-      <div className="h-2 w-full" style={{ backgroundColor: board.color ?? '#6366f1' }} />
+      <div className="h-2 w-full" style={{ backgroundColor: board.color ?? '#64748b' }} />
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
@@ -310,7 +310,7 @@ const BoardEditor: React.FC<BoardEditorProps> = ({ board, open, onClose, onSave 
     name: string;
     description: string;
     color: string;
-  }>({ name: '', description: '', color: '#6366f1' });
+  }>({ name: '', description: '', color: '#64748b' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -319,7 +319,7 @@ const BoardEditor: React.FC<BoardEditorProps> = ({ board, open, onClose, onSave 
       setForm({
         name: board?.name ?? '',
         description: board?.description ?? '',
-        color: board?.color ?? '#6366f1',
+        color: board?.color ?? '#64748b',
       });
       setError(null);
     }
@@ -510,7 +510,7 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <Button variant="ghost" leftIcon={<ArrowLeft size={14} />} onClick={onBack}>Boards</Button>
-          <div className="h-6 w-1 rounded-full" style={{ backgroundColor: board.color ?? '#6366f1' }} />
+          <div className="h-6 w-1 rounded-full" style={{ backgroundColor: board.color ?? '#64748b' }} />
           <div className="min-w-0">
             <h1 className="truncate text-xl font-bold text-slate-900 dark:text-slate-100">{board.name}</h1>
             {board.description && (
@@ -575,7 +575,7 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
         <button
           type="button"
           onClick={() => setAddingColumn(true)}
-          className="flex w-72 flex-shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 px-3 py-6 text-sm font-medium text-slate-500 transition-colors hover:border-primary-400 hover:bg-primary-50/60 hover:text-primary-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400 dark:hover:border-primary-500 dark:hover:bg-primary-900/20 dark:hover:text-primary-300"
+          className="flex w-72 flex-shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 px-3 py-6 text-sm font-medium text-slate-500 transition-colors hover:border-slate-400 hover:bg-slate-100 hover:text-slate-800 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-slate-400 dark:hover:border-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-slate-200"
         >
           <Plus size={16} /> Add column
         </button>
@@ -887,7 +887,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, assignee, onClick, onDelete }
             <>
               <span
                 className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                style={{ backgroundColor: assignee.color ?? '#6366f1' }}
+                style={{ backgroundColor: '#64748b' }}
                 title={assignee.name}
               >
                 {getInitial(assignee.name)}
@@ -1218,7 +1218,7 @@ const TaskEditor: React.FC<TaskEditorProps> = ({ task, boardId, defaultColumnId,
               </div>
             </div>
             {task.completedAt && (
-              <p className="text-xs text-emerald-600 dark:text-emerald-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 ✓ Completed {formatDateTime(task.completedAt)}
               </p>
             )}
@@ -1322,7 +1322,7 @@ const AiPlanModal: React.FC<AiPlanModalProps> = ({ open, onClose, board, agents,
       onClose={onClose}
       title={
         <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-primary-500" />
+          <Sparkles size={16} className="text-slate-500" />
           <span>Generate with AI</span>
         </div>
       }
@@ -1419,7 +1419,7 @@ const ActivityTimeline: React.FC<{ events: KanbanTaskEvent[]; agentsById: Map<st
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="text-xs text-primary-600 hover:underline dark:text-primary-400"
+            className="text-xs text-slate-600 hover:underline dark:text-slate-400"
           >
             {expanded ? 'Collapse' : 'Show all'}
           </button>
@@ -1437,7 +1437,7 @@ const ActivityTimeline: React.FC<{ events: KanbanTaskEvent[]; agentsById: Map<st
                 <span className="flex items-center gap-1" title={agent.name}>
                   <span
                     className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold text-white"
-                    style={{ backgroundColor: agent.color ?? '#6366f1' }}
+                    style={{ backgroundColor: '#64748b' }}
                   >
                     {getInitial(agent.name)}
                   </span>

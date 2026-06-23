@@ -1,6 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Bot, Trash2, Edit, Wand2, Users, Sparkles, AlertCircle, MessageSquare } from 'lucide-react';
+import {
+  Plus, Bot, Trash2, Edit, Wand2, Users, Sparkles,
+  AlertCircle, MessageSquare, Copy, Download, Upload,
+} from 'lucide-react';
 import { useAgentsStore } from '../stores/agents';
 import { useChatRoomsStore } from '../stores/chatrooms';
 import AgentEditor from '../components/AgentEditor';
@@ -9,7 +12,7 @@ import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 import type { Agent } from '../../shared/types';
 import type { AgentTemplate } from '../../shared/agent-templates';
-import { cn, getInitial } from '../lib/utils';
+import { cn, getInitial, downloadFile } from '../lib/utils';
 import type { AgentFormData } from '../lib/types';
 import { incrementTemplateUsage } from '../lib/template-usage';
 
@@ -21,7 +24,12 @@ const AgentsPage: React.FC = () => {
   const createAgent = useAgentsStore((s) => s.createAgent);
   const updateAgent = useAgentsStore((s) => s.updateAgent);
   const deleteAgent = useAgentsStore((s) => s.deleteAgent);
+  const duplicateAgent = useAgentsStore((s) => s.duplicateAgent);
+  const exportAgent = useAgentsStore((s) => s.exportAgent);
+  const importAgent = useAgentsStore((s) => s.importAgent);
   const getOrCreateDirect = useChatRoomsStore((s) => s.getOrCreateDirect);
+
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Agent | null>(null);
@@ -38,9 +46,7 @@ const AgentsPage: React.FC = () => {
     return m;
   }, [teams]);
 
-  function openNew() {
-    setPickerOpen(true);
-  }
+  function openNew() { setPickerOpen(true); }
 
   function openNewBlank() {
     setEditing(null);
@@ -77,9 +83,7 @@ const AgentsPage: React.FC = () => {
     setPendingCreate(null);
     try {
       await createAgent(data);
-      if (templateId) {
-        incrementTemplateUsage(templateId);
-      }
+      if (templateId) incrementTemplateUsage(templateId);
       setEditorOpen(false);
       setPendingTemplate(null);
     } catch (err) {
@@ -106,6 +110,40 @@ const AgentsPage: React.FC = () => {
     }
   }
 
+  async function handleDuplicate(agent: Agent) {
+    try {
+      await duplicateAgent(agent.id);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to duplicate agent.');
+    }
+  }
+
+  async function handleExport(agent: Agent) {
+    try {
+      const json = await exportAgent(agent.id);
+      const filename = `${agent.name.replace(/[^a-z0-9_-]/gi, '_').toLowerCase()}.json`;
+      downloadFile(json, filename, 'application/json');
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to export agent.');
+    }
+  }
+
+  function handleImportClick() {
+    importInputRef.current?.click();
+  }
+
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    try {
+      const text = await file.text();
+      await importAgent(text);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to import agent. Check JSON format.');
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -116,7 +154,18 @@ const AgentsPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={openNew} className="btn-primary">
+          <button type="button" onClick={handleImportClick} className="btn-secondary">
+            <Upload size={15} />
+            Import
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+          <button type="button" onClick={openNew} className="btn-primary">
             <Sparkles size={16} />
             New Agent
           </button>
@@ -130,28 +179,24 @@ const AgentsPage: React.FC = () => {
           ))}
         </div>
       ) : agents.length === 0 ? (
-        <div className="card relative overflow-hidden p-12 text-center">
-          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gradient-to-br from-primary-400/20 to-purple-400/20 blur-3xl" />
-          <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-gradient-to-br from-pink-400/20 to-amber-400/20 blur-3xl" />
-          <div className="relative">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-primary-500/30 animate-float">
-              <Bot size={36} strokeWidth={2} />
-            </div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No agents yet</h2>
-            <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
-              Agents are AI personas with skills and roles. Pick a template to get started quickly,
-              or build one from scratch.
-            </p>
-            <div className="mt-5 flex items-center justify-center gap-2">
-              <button onClick={openNew} className="btn-primary">
-                <Sparkles size={16} />
-                Choose a template
-              </button>
-              <button onClick={openNewBlank} className="btn-secondary">
-                <Plus size={16} />
-                Start from blank
-              </button>
-            </div>
+        <div className="card p-12 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-400 animate-float dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-500">
+            <Bot size={30} strokeWidth={1.8} />
+          </div>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">No agents yet</h2>
+          <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
+            Agents are AI personas with skills and roles. Pick a template to get started quickly,
+            or build one from scratch.
+          </p>
+          <div className="mt-5 flex items-center justify-center gap-2">
+            <button type="button" onClick={openNew} className="btn-primary">
+              <Sparkles size={15} />
+              Choose a template
+            </button>
+            <button type="button" onClick={openNewBlank} className="btn-secondary">
+              <Plus size={15} />
+              Start from blank
+            </button>
           </div>
         </div>
       ) : (
@@ -162,8 +207,10 @@ const AgentsPage: React.FC = () => {
               agent={agent}
               teamName={agent.teamId ? teamsById.get(agent.teamId)?.name : undefined}
               onEdit={() => openEdit(agent)}
-              onDelete={() => handleDelete(agent)}
+              onDelete={() => void handleDelete(agent)}
               onChat={() => void handleStartChat(agent)}
+              onDuplicate={() => void handleDuplicate(agent)}
+              onExport={() => void handleExport(agent)}
             />
           ))}
         </div>
@@ -196,7 +243,7 @@ const AgentsPage: React.FC = () => {
         onClose={cancelCreate}
         title={
           <div className="flex items-center gap-2">
-            <AlertCircle size={16} className="text-amber-500" />
+            <AlertCircle size={16} className="text-slate-500" />
             <span>Add this agent?</span>
           </div>
         }
@@ -268,20 +315,17 @@ interface AgentCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onChat: () => void;
+  onDuplicate: () => void;
+  onExport: () => void;
 }
 
-const AgentCard: React.FC<AgentCardProps> = ({ agent, teamName, onEdit, onDelete, onChat }) => {
+const AgentCard: React.FC<AgentCardProps> = ({
+  agent, teamName, onEdit, onDelete, onChat, onDuplicate, onExport,
+}) => {
   return (
-    <div className="card group relative flex flex-col gap-3 overflow-hidden p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
-      <div
-        className="absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-15 blur-2xl transition-opacity group-hover:opacity-25"
-        style={{ backgroundColor: agent.color ?? '#6366f1' }}
-      />
-      <div className="relative flex items-start gap-3">
-        <div
-          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-base font-bold text-white shadow-md ring-2 ring-white/20"
-          style={{ backgroundColor: agent.color ?? '#6366f1' }}
-        >
+    <div className="card group flex flex-col gap-3 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 text-sm font-bold text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-300">
           {agent.avatar ? (
             <img src={agent.avatar} alt={agent.name} className="h-full w-full rounded-xl object-cover" />
           ) : (
@@ -290,9 +334,9 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, teamName, onEdit, onDelete
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <h3 className="truncate font-semibold text-slate-900 dark:text-slate-100">{agent.name}</h3>
+            <h3 className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{agent.name}</h3>
             {agent.isLead && (
-              <span className="badge-warning !text-[10px] !py-0">
+              <span className="badge-neutral !text-[10px] !py-0">
                 <Wand2 size={9} /> Lead
               </span>
             )}
@@ -303,18 +347,9 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, teamName, onEdit, onDelete
         </div>
       </div>
 
-      <div className="relative flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5">
         {agent.role !== 'member' && (
-          <span
-            className={cn(
-              'badge',
-              agent.role === 'lead'
-                ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300'
-                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
-            )}
-          >
-            {agent.role}
-          </span>
+          <span className="badge-neutral">{agent.role}</span>
         )}
         {teamName && (
           <span className="badge-neutral">
@@ -332,7 +367,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, teamName, onEdit, onDelete
         <button
           type="button"
           onClick={onChat}
-          className="inline-flex items-center gap-1.5 rounded-md bg-primary-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
+          className="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           title={`Start a 1:1 chat with ${agent.name}`}
         >
           <MessageSquare size={12} />
@@ -341,8 +376,24 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, teamName, onEdit, onDelete
         <div className="flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <button
             type="button"
+            onClick={onDuplicate}
+            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-zinc-700 dark:hover:text-slate-100"
+            title="Duplicate agent"
+          >
+            <Copy size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={onExport}
+            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-zinc-700 dark:hover:text-slate-100"
+            title="Export agent as JSON"
+          >
+            <Download size={14} />
+          </button>
+          <button
+            type="button"
             onClick={onEdit}
-            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-zinc-700 dark:hover:text-slate-100"
             title="Edit"
           >
             <Edit size={14} />

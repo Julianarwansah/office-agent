@@ -158,6 +158,50 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
     }
   });
 
+  ipcMain.handle(IPC_CHANNELS.MESSAGE.REGENERATE, async (
+    _evt,
+    args: { messageId: string },
+  ): Promise<ApiResponse<void>> => {
+    try {
+      if (!args?.messageId || typeof args.messageId !== 'string') {
+        return fail('messageId is required');
+      }
+      const agentMsg = messages.findById(args.messageId);
+      if (!agentMsg) return fail(`Message not found: ${args.messageId}`);
+      if (agentMsg.senderType !== 'agent') return fail('Only agent messages can be regenerated');
+
+      const { chatRoomId, senderId: agentId } = agentMsg;
+      const room: ChatRoom | null = chatrooms.findById(chatRoomId);
+      if (!room) return fail(`Chatgrub not found: ${chatRoomId}`);
+
+      const parentUserMsg = agentMsg.parentId ? messages.findById(agentMsg.parentId) : null;
+      const userMessage = parentUserMsg?.content ?? '';
+      if (!userMessage) return fail('Could not find the original user message to regenerate from');
+
+      messages.delete(args.messageId);
+
+      const controller = new AbortController();
+      const previous = activeRuns.get(chatRoomId);
+      activeRuns.set(chatRoomId, controller);
+      if (previous) { try { previous.abort(); } catch { /* ignore */ } }
+
+      void orchestrator
+        .streamChat(chatRoomId, agentId, userMessage, () => void 0, {
+          parentMessageId: parentUserMsg?.id,
+          signal: controller.signal,
+        })
+        .catch((err) => {
+          if ((err as { name?: string })?.name === 'AbortError') return;
+          log.error('regenerate streamChat failed', err);
+        })
+        .finally(() => clearActiveRun(chatRoomId, controller));
+
+      return ok(undefined);
+    } catch (err) {
+      return failErr('MESSAGE.REGENERATE', err);
+    }
+  });
+
   ipcMain.handle(IPC_CHANNELS.CHAT.CANCEL, async (
     _evt,
     chatRoomId?: string,

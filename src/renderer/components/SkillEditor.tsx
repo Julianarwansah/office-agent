@@ -413,7 +413,7 @@ const SkillEditor: React.FC<SkillEditorProps> = ({
             onChange={(e) => update('implementation', e.target.value)}
             spellCheck={false}
             rows={12}
-            className="w-full rounded-md border border-slate-200 bg-slate-950 px-3 py-2 font-mono text-xs leading-relaxed text-slate-100 shadow-inner focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:border-slate-700"
+            className="w-full rounded-md border border-slate-200 bg-zinc-950 px-3 py-2 font-mono text-xs leading-relaxed text-slate-100 shadow-inner focus:border-slate-400 focus:ring-1 focus:ring-slate-200 dark:border-zinc-700"
             placeholder="// return { success: true, output: '…' }"
           />
           <p className="mt-1 text-xs text-slate-500">
@@ -450,7 +450,7 @@ const SkillEditor: React.FC<SkillEditorProps> = ({
             className={cn(
               'rounded-md border p-3 text-sm',
               testResult.success
-                ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
+                ? 'border-slate-300 bg-slate-50 dark:border-zinc-600 dark:bg-zinc-800/50'
                 : 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20',
             )}
           >

@@ -116,7 +116,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, members, onEdit, onDelete }) 
     <div className="card flex flex-col overflow-hidden transition-shadow hover:shadow-md">
       <div
         className="h-2 w-full"
-        style={{ backgroundColor: team.color ?? '#6366f1' }}
+        style={{ backgroundColor: team.color ?? '#64748b' }}
       />
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex items-start justify-between gap-2">
@@ -157,7 +157,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, members, onEdit, onDelete }) 
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="mt-auto flex items-center gap-1 self-start text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
+          className="mt-auto flex items-center gap-1 self-start text-xs font-medium text-slate-600 hover:underline dark:text-slate-400"
         >
           {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
           {members.length} agent{members.length !== 1 ? 's' : ''}
@@ -172,7 +172,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, members, onEdit, onDelete }) 
               <li key={m.id} className="flex items-center gap-2 text-xs">
                 <span
                   className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                  style={{ backgroundColor: m.color ?? '#6366f1' }}
+                  style={{ backgroundColor: m.color ?? '#64748b' }}
                 >
                   {getInitial(m.name)}
                 </span>

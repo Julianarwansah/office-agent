@@ -38,7 +38,7 @@ const SettingsPage: React.FC = () => {
               className={cn(
                 'border-b-2 px-4 py-2 text-sm font-medium transition-colors',
                 tab === t.id
-                  ? 'border-primary-600 text-primary-700 dark:text-primary-300'
+                  ? 'border-slate-800 text-slate-900 dark:border-slate-200 dark:text-slate-100'
                   : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:hover:text-slate-300',
               )}
             >
@@ -135,7 +135,7 @@ const GeneralTab: React.FC = () => {
             Save
           </button>
           {saved && (
-            <span className="flex items-center gap-1 text-sm text-green-600">
+            <span className="flex items-center gap-1 text-sm text-slate-700">
               <Check size={14} /> Saved
             </span>
           )}
@@ -214,10 +214,10 @@ const LLMTab: React.FC = () => {
                   className={cn(
                     'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium',
                     allHealthy
-                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                      ? 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300'
                       : failureCount > 0
-                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-                        : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                        ? 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400'
+                        : 'bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-slate-300',
                   )}
                 >
                   {allHealthy ? <Check size={10} /> : <X size={10} />}
@@ -268,10 +268,9 @@ const LLMTab: React.FC = () => {
 
       {!loading && providers.length === 0 && (
         <div className="card relative overflow-hidden p-12 text-center">
-          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-gradient-to-br from-primary-400/20 to-purple-400/20 blur-3xl" />
           <div className="relative">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-primary-500/30">
-              <Network size={36} />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-400">
+              <Network size={26} strokeWidth={1.8} />
             </div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No LLM providers yet</h3>
             <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
@@ -398,10 +397,10 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
               className={cn(
                 'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-white shadow-sm',
                 isHealthy
-                  ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
+                  ? 'bg-slate-700 dark:bg-zinc-600'
                   : isFailing
-                    ? 'bg-gradient-to-br from-red-500 to-red-600'
-                    : 'bg-gradient-to-br from-primary-500 to-primary-600',
+                    ? 'bg-red-600'
+                    : 'bg-slate-500',
               )}
             >
               <Network size={14} />
@@ -410,12 +409,12 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
               <div className="flex items-center gap-1.5">
                 <h3 className="truncate font-medium text-slate-900 dark:text-slate-100">{provider.name}</h3>
                 {isDefault && (
-                  <span className="badge-warning !text-[10px]">
+                  <span className="badge-neutral !text-[10px]">
                     <Star size={9} /> Default
                   </span>
                 )}
                 {isHealthy && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-700 dark:bg-zinc-800 dark:text-slate-300">
                     <Check size={9} /> Online
                   </span>
                 )}
@@ -493,9 +492,7 @@ const WorkspaceTab: React.FC = () => {
               <p className="font-mono text-xs text-slate-500">{w.path}</p>
             </div>
             {w.isDefault && (
-              <span className="badge bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
-                Default
-              </span>
+              <span className="badge-neutral">Default</span>
             )}
           </li>
         ))}

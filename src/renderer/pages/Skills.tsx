@@ -19,15 +19,15 @@ import SkillEditor from '../components/SkillEditor';
 import type { UserSkillDraft } from '../stores/skills';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  file: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  web: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  network: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
+  file: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
+  web: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
+  network: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
   shell: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
   system: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
-  code: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  memory: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-  data: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
-  productivity: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300',
+  code: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
+  memory: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
+  data: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
+  productivity: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
   default: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
 };
 
@@ -227,7 +227,7 @@ const SkillCard: React.FC<{ skill: Skill }> = ({ skill }) => {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <Terminal size={14} className="flex-shrink-0 text-primary-500" />
+            <Terminal size={14} className="flex-shrink-0 text-slate-500" />
             <h3 className="truncate font-semibold text-slate-900 dark:text-slate-100">
               {skill.displayName}
             </h3>
@@ -271,7 +271,7 @@ const SkillCard: React.FC<{ skill: Skill }> = ({ skill }) => {
       )}
 
       {skill.requiresApproval && (
-        <p className="text-xs italic text-amber-600 dark:text-amber-400">
+        <p className="text-xs italic text-slate-500 dark:text-slate-400">
           Requires user approval before execution.
         </p>
       )}
@@ -292,7 +292,7 @@ const UserSkillCard: React.FC<UserSkillCardProps> = ({ skill, onEdit, onDelete, 
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <Terminal size={14} className="flex-shrink-0 text-primary-500" />
+            <Terminal size={14} className="flex-shrink-0 text-slate-500" />
             <h3 className="truncate font-semibold text-slate-900 dark:text-slate-100">
               {skill.displayName || skill.name}
             </h3>
@@ -313,7 +313,7 @@ const UserSkillCard: React.FC<UserSkillCardProps> = ({ skill, onEdit, onDelete, 
             className={cn(
               'badge',
               skill.enabled
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                ? 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300'
                 : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
             )}
             title={skill.enabled ? 'Enabled' : 'Disabled'}
@@ -355,7 +355,7 @@ const UserSkillCard: React.FC<UserSkillCardProps> = ({ skill, onEdit, onDelete, 
       )}
 
       {skill.requiresApproval && (
-        <p className="text-xs italic text-amber-600 dark:text-amber-400">
+        <p className="text-xs italic text-slate-500 dark:text-slate-400">
           Requires user approval before execution.
         </p>
       )}

@@ -283,7 +283,7 @@ const LLMProviderEditor: React.FC<LLMProviderEditorProps> = ({
                     onClick={() => update('model', m)}
                     className={`truncate rounded px-2 py-1 text-left text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 ${
                       form.model === m
-                        ? 'bg-primary-100 text-primary-800 dark:bg-primary-900/40 dark:text-primary-200'
+                        ? 'bg-slate-100 text-slate-900 dark:bg-zinc-700 dark:text-slate-100'
                         : ''
                     }`}
                     title={m}

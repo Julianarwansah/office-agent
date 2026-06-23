@@ -17,6 +17,9 @@ interface AgentsState {
   updateAgent: (id: string, data: Partial<AgentFormData>) => Promise<Agent | null>;
   deleteAgent: (id: string) => Promise<void>;
   setAgentSkills: (id: string, skills: AgentSkill[]) => Promise<Agent | null>;
+  duplicateAgent: (id: string) => Promise<Agent>;
+  exportAgent: (id: string) => Promise<string>;
+  importAgent: (json: string) => Promise<Agent>;
 
   createTeam: (data: TeamFormData) => Promise<Team>;
   updateTeam: (id: string, data: Partial<TeamFormData>) => Promise<Team | null>;
@@ -79,6 +82,23 @@ export const useAgentsStore = create<AgentsState>((set, get) => ({
     const updated = unwrap(await api.agents.setSkills(id, skills));
     await get().loadAgents();
     return updated;
+  },
+
+  duplicateAgent: async (id) => {
+    const created = unwrap(await api.agents.duplicate(id));
+    await get().loadAgents();
+    return created;
+  },
+
+  exportAgent: async (id) => {
+    const result = unwrap(await api.agents.export(id));
+    return result.json;
+  },
+
+  importAgent: async (json) => {
+    const created = unwrap(await api.agents.import({ json }));
+    await get().loadAgents();
+    return created;
   },
 
   createTeam: async (data) => {

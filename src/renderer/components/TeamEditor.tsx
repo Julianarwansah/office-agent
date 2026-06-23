@@ -14,16 +14,16 @@ export interface TeamEditorProps {
 }
 
 const COLOR_OPTIONS = [
-  '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#ef4444',
-  '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981',
-  '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#a855f7',
+  '#64748b', '#475569', '#334155', '#1e293b', '#0f172a',
+  '#6b7280', '#4b5563', '#374151', '#1f2937', '#111827',
+  '#78716c', '#57534e', '#44403c', '#292524', '#1c1917',
 ];
 
 const EMPTY: TeamFormData = {
   name: '',
   description: '',
   instructions: '',
-  color: '#6366f1',
+  color: '#64748b',
   avatar: '',
 };
 
@@ -35,7 +35,7 @@ const TeamEditor: React.FC<TeamEditorProps> = ({ team, open, onClose, onSave }) 
       name: team.name,
       description: team.description ?? '',
       instructions: team.instructions ?? '',
-      color: team.color ?? '#6366f1',
+      color: team.color ?? '#64748b',
       avatar: team.avatar ?? '',
     };
   }, [team]);
@@ -146,7 +146,7 @@ const TeamEditor: React.FC<TeamEditorProps> = ({ team, open, onClose, onSave }) 
             ))}
             <input
               type="color"
-              value={form.color ?? '#6366f1'}
+              value={form.color ?? '#64748b'}
               onChange={(e) => update('color', e.target.value)}
               className="h-7 w-12 cursor-pointer rounded border border-slate-300 dark:border-slate-600"
             />

@@ -16,12 +16,12 @@ export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonE
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 disabled:bg-primary-400',
+  primary: 'bg-slate-900 text-white hover:bg-slate-700 active:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100',
   secondary:
-    'bg-slate-200 text-slate-900 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600',
+    'bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 dark:bg-zinc-800 dark:text-slate-200 dark:ring-zinc-700 dark:hover:bg-zinc-700',
   ghost:
-    'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700',
-  danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 disabled:bg-red-400',
+    'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-zinc-800',
+  danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800',
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {

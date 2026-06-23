@@ -28,7 +28,7 @@
   }
 
   html.dark body {
-    @apply bg-slate-950 text-slate-100;
+    @apply bg-zinc-950 text-slate-100;
   }
 
   *,
@@ -48,20 +48,18 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-primary-500/60 ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
+    @apply outline-none ring-2 ring-slate-400/50 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950;
   }
 
-  /* Smooth scroll behavior */
   html {
     scroll-behavior: smooth;
   }
 
-  /* Selection color */
   ::selection {
-    @apply bg-primary-200 text-primary-900;
+    @apply bg-slate-200 text-slate-900;
   }
   html.dark ::selection {
-    @apply bg-primary-800 text-primary-100;
+    @apply bg-slate-700 text-slate-100;
   }
 }
 
@@ -72,33 +70,33 @@
   }
 
   .btn-primary {
-    @apply btn bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-sm shadow-primary-500/25 hover:from-primary-600 hover:to-primary-700 hover:shadow-md hover:shadow-primary-500/30 active:scale-[0.98];
+    @apply btn bg-slate-900 text-white shadow-sm hover:bg-slate-700 active:scale-[0.98] dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100;
   }
 
   .btn-secondary {
-    @apply btn bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 hover:ring-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-700 dark:hover:ring-slate-600;
+    @apply btn bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 hover:ring-slate-300 dark:bg-zinc-800 dark:text-slate-200 dark:ring-zinc-700 dark:hover:bg-zinc-700 dark:hover:ring-zinc-600;
   }
 
   .btn-ghost {
-    @apply btn text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/70;
+    @apply btn text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-zinc-800/70;
   }
 
   .btn-danger {
-    @apply btn bg-gradient-to-br from-red-500 to-red-600 text-white shadow-sm shadow-red-500/25 hover:from-red-600 hover:to-red-700;
+    @apply btn bg-red-600 text-white shadow-sm hover:bg-red-700 active:scale-[0.98];
   }
 
   /* ---- Inputs ---- */
   .input {
-    @apply w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-primary-500 dark:focus:ring-primary-900/40;
+    @apply w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-zinc-500 dark:focus:ring-zinc-800;
   }
 
   /* ---- Cards ---- */
   .card {
-    @apply rounded-xl border border-slate-200/80 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900;
+    @apply rounded-xl border border-slate-200/80 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900;
   }
 
   .card-interactive {
-    @apply card cursor-pointer hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-lg dark:hover:border-primary-700/50;
+    @apply card cursor-pointer hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:hover:border-zinc-600;
   }
 
   /* ---- Badges ---- */
@@ -107,33 +105,33 @@
   }
 
   .badge-primary {
-    @apply badge bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300;
+    @apply badge bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300;
   }
 
   .badge-success {
-    @apply badge bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300;
+    @apply badge bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-slate-400;
   }
 
   .badge-warning {
-    @apply badge bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300;
+    @apply badge bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-slate-400;
   }
 
   .badge-danger {
-    @apply badge bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300;
+    @apply badge bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400;
   }
 
   .badge-neutral {
-    @apply badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300;
+    @apply badge bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-slate-400;
   }
 
   /* ---- Glass panel ---- */
   .glass {
-    @apply bg-white/80 backdrop-blur-md dark:bg-slate-900/70;
+    @apply bg-white/80 backdrop-blur-md dark:bg-zinc-900/70;
   }
 
-  /* ---- Gradient text ---- */
+  /* ---- Gradient text (now just dark) ---- */
   .text-gradient {
-    @apply bg-gradient-to-br from-primary-600 via-purple-500 to-pink-500 bg-clip-text text-transparent;
+    @apply text-slate-900 dark:text-slate-100;
   }
 }
 
@@ -161,12 +159,12 @@
 }
 
 html.dark *::-webkit-scrollbar-thumb {
-  @apply bg-slate-700/70;
+  @apply bg-zinc-700/70;
   background-clip: padding-box;
 }
 
 html.dark *::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-600/80;
+  @apply bg-zinc-600/80;
   background-clip: padding-box;
 }
 
@@ -206,7 +204,7 @@ html.dark *::-webkit-scrollbar-thumb:hover {
 }
 
 .prose a {
-  @apply text-primary-600 underline hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300;
+  @apply text-slate-900 underline hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-300;
 }
 
 .prose ul {
@@ -222,19 +220,19 @@ html.dark *::-webkit-scrollbar-thumb:hover {
 }
 
 .prose blockquote {
-  @apply my-3 border-l-4 border-primary-200 bg-primary-50/50 pl-4 italic text-slate-600 dark:border-primary-800 dark:bg-primary-950/30 dark:text-slate-400;
+  @apply my-3 border-l-4 border-slate-300 bg-slate-50/80 pl-4 italic text-slate-600 dark:border-zinc-600 dark:bg-zinc-800/30 dark:text-slate-400;
 }
 
 .prose hr {
-  @apply my-4 border-slate-200 dark:border-slate-700;
+  @apply my-4 border-slate-200 dark:border-zinc-700;
 }
 
 .prose code {
-  @apply rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-pink-600 dark:bg-slate-800 dark:text-pink-400;
+  @apply rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-800 dark:bg-zinc-800 dark:text-slate-300;
 }
 
 .prose pre {
-  @apply my-3 overflow-x-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100 shadow-lg;
+  @apply my-3 overflow-x-auto rounded-lg bg-zinc-900 p-4 text-xs text-slate-100 shadow-lg;
 }
 
 .prose pre code {
@@ -253,7 +251,7 @@ html.dark *::-webkit-scrollbar-thumb:hover {
   @apply rounded-md bg-white/20 px-1.5 py-0.5 font-mono text-xs text-white;
 }
 .prose-invert pre {
-  @apply my-3 overflow-x-auto rounded-lg bg-slate-950/40 p-4 text-xs text-slate-100 shadow-lg ring-1 ring-inset ring-white/10;
+  @apply my-3 overflow-x-auto rounded-lg bg-zinc-950/60 p-4 text-xs text-slate-100 shadow-lg ring-1 ring-inset ring-white/10;
 }
 .prose-invert pre code {
   @apply bg-transparent p-0 text-inherit;
@@ -281,11 +279,11 @@ html.dark *::-webkit-scrollbar-thumb:hover {
 
 .prose th,
 .prose td {
-  @apply border border-slate-300 px-3 py-2 text-left dark:border-slate-600;
+  @apply border border-slate-200 px-3 py-2 text-left dark:border-zinc-600;
 }
 
 .prose th {
-  @apply bg-slate-100 font-semibold dark:bg-slate-700;
+  @apply bg-slate-100 font-semibold dark:bg-zinc-700;
 }
 
 .prose img {
@@ -456,7 +454,7 @@ html.dark *::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(
     90deg,
     rgba(148, 163, 184, 0.1) 0%,
-    rgba(148, 163, 184, 0.25) 50%,
+    rgba(148, 163, 184, 0.2) 50%,
     rgba(148, 163, 184, 0.1) 100%
   );
   background-size: 200% 100%;
@@ -472,48 +470,58 @@ html.dark *::-webkit-scrollbar-thumb:hover {
   animation: float 3s ease-in-out infinite;
 }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); }
+/* -------------------------------------------------------------------------- */
+/* Org chart agent activity animations                                         */
+/* -------------------------------------------------------------------------- */
+
+@keyframes agent-thinking {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(100, 116, 139, 0.4), 0 0 0 0 rgba(100, 116, 139, 0.2); }
+  50%       { box-shadow: 0 0 0 6px rgba(100, 116, 139, 0.08), 0 0 0 12px rgba(100, 116, 139, 0.04); }
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s infinite;
+@keyframes agent-streaming {
+  0%   { box-shadow: 0 0 0 0 rgba(63, 63, 70, 0.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(63, 63, 70, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(63, 63, 70, 0); }
+}
+
+@keyframes agent-tool {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(39, 39, 42, 0.5); }
+  50%       { box-shadow: 0 0 0 8px rgba(39, 39, 42, 0.1); }
+}
+
+@keyframes live-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
+.agent-thinking {
+  animation: agent-thinking 1.8s ease-in-out infinite;
+}
+
+.agent-streaming {
+  animation: agent-streaming 1.2s ease-out infinite;
+}
+
+.agent-tool {
+  animation: agent-tool 0.8s ease-in-out infinite;
+}
+
+.live-dot {
+  animation: live-dot 1s ease-in-out infinite;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Aurora gradient backdrop                                                     */
+/* Subtle background                                                           */
 /* -------------------------------------------------------------------------- */
 
 .aurora-bg {
-  background:
-    radial-gradient(at 20% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(168, 85, 247, 0.10) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(236, 72, 153, 0.08) 0px, transparent 50%),
-    radial-gradient(at 80% 80%, rgba(34, 211, 238, 0.08) 0px, transparent 50%);
+  background: none;
 }
-
-html.dark .aurora-bg {
-  background:
-    radial-gradient(at 20% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(236, 72, 153, 0.10) 0px, transparent 50%),
-    radial-gradient(at 80% 80%, rgba(34, 211, 238, 0.10) 0px, transparent 50%);
-}
-
-/* -------------------------------------------------------------------------- */
-/* Grid pattern                                                                */
-/* -------------------------------------------------------------------------- */
 
 .grid-pattern {
   background-image:
-    linear-gradient(rgba(99, 102, 241, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
+    linear-gradient(rgba(100, 116, 139, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 116, 139, 0.05) 1px, transparent 1px);
   background-size: 32px 32px;
-}
-
-html.dark .grid-pattern {
-  background-image:
-    linear-gradient(rgba(99, 102, 241, 0.10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.10) 1px, transparent 1px);
 }

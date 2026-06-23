@@ -133,11 +133,11 @@ export interface OrchestratorEventMap {
   };
   'memory:used': {
     agentId: string;
-    memories: Memory[];
+    memoryIds: string[];
   };
   'memory:created': {
     agentId: string;
-    memory: Memory;
+    memories: Memory[];
   };
 }
 
@@ -216,6 +216,9 @@ export interface OfficeAPI {
     update(id: string, partial: Partial<Agent>): Promise<ApiResponse<Agent | null>>;
     delete(id: string): Promise<ApiResponse<boolean>>;
     setSkills(id: string, skills: AgentSkill[]): Promise<ApiResponse<Agent | null>>;
+    duplicate(id: string): Promise<ApiResponse<Agent>>;
+    export(id: string): Promise<ApiResponse<{ json: string }>>;
+    import(args: { json: string }): Promise<ApiResponse<Agent>>;
   };
 
   /* ----------------------------- Teams ---------------------------- */
@@ -275,6 +278,7 @@ export interface OfficeAPI {
     delete(id: string): Promise<ApiResponse<boolean>>;
     clear(args: { chatRoomId: string }): Promise<ApiResponse<number>>;
     search(args: { chatRoomId: string; query: string }): Promise<ApiResponse<Message[]>>;
+    regenerate(args: { messageId: string }): Promise<ApiResponse<void>>;
   };
 
   /* ----------------------------- Chat ----------------------------- */

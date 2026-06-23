@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Plus,
@@ -10,7 +10,12 @@ import {
   AlertTriangle,
   ChevronRight,
   Pencil,
+  Search,
+  X,
+  Loader2,
 } from 'lucide-react';
+import { api } from '../lib/api';
+import type { ChatRoomType, Message } from '../../shared/types';
 import { useChatRoomsStore } from '../stores/chatrooms';
 import { useAgentsStore } from '../stores/agents';
 import Modal from '../components/ui/Modal';
@@ -18,7 +23,6 @@ import Button from '../components/ui/Button';
 import Input, { Textarea, Select } from '../components/ui/Input';
 import MessageBubble from '../components/MessageBubble';
 import InputArea from '../components/InputArea';
-import type { ChatRoomType } from '../../shared/types';
 import type { ChatRoomFormData } from '../lib/types';
 import { cn, formatRelative, getInitial } from '../lib/utils';
 
@@ -42,6 +46,7 @@ const ChatRoomPage: React.FC = () => {
   const sendError = useChatRoomsStore((s) => s.sendError);
   const sendMessage = useChatRoomsStore((s) => s.sendMessage);
   const cancelStream = useChatRoomsStore((s) => s.cancelStream);
+  const removeMessage = useChatRoomsStore((s) => s.removeMessage);
   const createChatRoom = useChatRoomsStore((s) => s.createChatRoom);
   const updateChatRoom = useChatRoomsStore((s) => s.updateChatRoom);
   const deleteChatRoom = useChatRoomsStore((s) => s.deleteChatRoom);
@@ -58,6 +63,12 @@ const ChatRoomPage: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Message[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const effectiveId = chatRoomId ?? currentChatRoomId ?? null;
 
@@ -141,22 +152,49 @@ const ChatRoomPage: React.FC = () => {
     navigate('/chat');
   }
 
+  const handleSearch = useCallback(async (query: string) => {
+    if (!effectiveId || !query.trim()) { setSearchResults([]); return; }
+    setSearchLoading(true);
+    try {
+      const res = await api.messages.search({ chatRoomId: effectiveId, query: query.trim() });
+      if (res.success && res.data) setSearchResults(res.data);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, [effectiveId]);
+
+  useEffect(() => {
+    const t = setTimeout(() => { void handleSearch(searchQuery); }, 300);
+    return () => clearTimeout(t);
+  }, [searchQuery, handleSearch]);
+
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50);
+    else { setSearchQuery(''); setSearchResults([]); setHighlightedMsgId(null); }
+  }, [searchOpen]);
+
+  function scrollToMessage(msgId: string) {
+    setHighlightedMsgId(msgId);
+    document.getElementById(`msg-${msgId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => setHighlightedMsgId(null), 2000);
+  }
+
   return (
     <div className="flex h-full -m-6 overflow-hidden">
-      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex items-center justify-between border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex items-center justify-between border-b border-slate-200 px-3 py-3 dark:border-zinc-800">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Chatgrub</h2>
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
-            className="rounded-md bg-primary-50 p-1.5 text-primary-600 transition-colors hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50"
+            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-zinc-800"
             title="New chatgrub"
           >
             <Plus size={14} />
           </button>
         </div>
         {(chatroomsError || agentsError) && (
-          <div className="flex items-start gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
+          <div className="flex items-start gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-slate-300">
             <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" />
             <span>
               {chatroomsError ? `Chatgrub: ${chatroomsError}` : ''}
@@ -174,14 +212,14 @@ const ChatRoomPage: React.FC = () => {
             </div>
           ) : chatrooms.length === 0 ? (
             <div className="flex flex-col items-center px-4 py-8 text-center">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-100 to-purple-100 dark:from-primary-900/30 dark:to-purple-900/30">
-                <MessageSquare className="text-primary-500" size={20} />
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-500">
+                <MessageSquare size={20} />
               </div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-300">No chatgrub yet</p>
               <button
                 type="button"
                 onClick={() => setCreateOpen(true)}
-                className="mt-1 text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
+                className="mt-1 text-xs font-medium text-slate-600 hover:underline dark:text-slate-400"
               >
                 Create your first one →
               </button>
@@ -195,16 +233,14 @@ const ChatRoomPage: React.FC = () => {
                     onClick={() => navigate(`/chat/${c.id}`)}
                     className={cn(
                       'flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/40',
-                      effectiveId === c.id && 'bg-primary-50 dark:bg-primary-900/30',
+                      effectiveId === c.id && 'bg-slate-100 dark:bg-zinc-800',
                     )}
                   >
                     <MessageSquare
                       size={14}
                       className={cn(
                         'mt-1 flex-shrink-0',
-                        effectiveId === c.id
-                          ? 'text-primary-600 dark:text-primary-400'
-                          : 'text-slate-400',
+                        effectiveId === c.id ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400',
                       )}
                     />
                     <div className="min-w-0 flex-1">
@@ -226,7 +262,7 @@ const ChatRoomPage: React.FC = () => {
           <EmptyChat onCreate={() => setCreateOpen(true)} />
         ) : (
           <>
-            <header className="flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-3 dark:border-slate-700 dark:bg-slate-800">
+            <header className="flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-900">
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
                   {activeChatroom.name}
@@ -236,6 +272,19 @@ const ChatRoomPage: React.FC = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen((v) => !v)}
+                  className={cn(
+                    'rounded p-1.5 transition-colors',
+                    searchOpen
+                      ? 'bg-slate-100 text-slate-900 dark:bg-zinc-700 dark:text-slate-100'
+                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-zinc-700 dark:hover:text-slate-100',
+                  )}
+                  title="Search messages"
+                >
+                  <Search size={15} />
+                </button>
                 <button
                   type="button"
                   onClick={() => setEditOpen(true)}
@@ -257,7 +306,7 @@ const ChatRoomPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDelete(activeChatroom.id)}
+                  onClick={() => void handleDelete(activeChatroom.id)}
                   className="rounded p-1.5 text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
                   title="Delete chatgrub"
                 >
@@ -266,7 +315,7 @@ const ChatRoomPage: React.FC = () => {
               </div>
             </header>
 
-            <div ref={scrollRef} className="flex-1 overflow-y-auto bg-slate-50 px-4 py-6 scrollbar-thin dark:bg-slate-900">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto bg-slate-50 px-4 py-6 scrollbar-thin dark:bg-zinc-950">
               <div className="mx-auto flex max-w-3xl flex-col gap-4">
                 {loadingMessages && activeMessages.length === 0 && (
                   <p className="text-center text-xs text-slate-500">Loading messages…</p>
@@ -279,14 +328,14 @@ const ChatRoomPage: React.FC = () => {
                 )}
                 {!loadingMessages && activeMessages.length === 0 && activeStreaming.length === 0 && (
                   <div className="my-16 flex flex-col items-center text-center">
-                    <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-100 via-purple-100 to-pink-100 shadow-lg dark:from-primary-900/30 dark:via-purple-900/30 dark:to-pink-900/30">
-                      <Bot className="text-primary-500" size={36} />
+                    <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-500">
+                      <Bot size={28} strokeWidth={1.8} />
                     </div>
                     <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                       Start the conversation
                     </h3>
                     <p className="mt-1 max-w-sm text-sm text-slate-500">
-                      Send a message below to begin. Use <kbd className="rounded border border-slate-200 bg-slate-50 px-1 font-mono text-[10px] dark:border-slate-700 dark:bg-slate-800">@</kbd> to mention a specific agent.
+                      Send a message below to begin. Use <kbd className="rounded border border-slate-200 bg-slate-50 px-1 font-mono text-[10px] dark:border-zinc-800 dark:bg-zinc-900">@</kbd> to mention a specific agent.
                     </p>
                   </div>
                 )}
@@ -296,13 +345,23 @@ const ChatRoomPage: React.FC = () => {
                   .map((m) => {
                   const agent = agentsById.get(m.senderId);
                   return (
-                    <MessageBubble
+                    <div
                       key={m.id}
-                      message={m}
-                      agentName={agent?.name}
-                      agentColor={agent?.color}
-                      agentAvatar={agent?.avatar}
-                    />
+                      id={`msg-${m.id}`}
+                      className={cn(
+                        'rounded-xl transition-all duration-500',
+                        highlightedMsgId === m.id && 'ring-2 ring-slate-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-zinc-900',
+                      )}
+                    >
+                      <MessageBubble
+                        message={m}
+                        agentName={agent?.name}
+                        agentColor={agent?.color}
+                        agentAvatar={agent?.avatar}
+                        onRegenerate={() => effectiveId && removeMessage(effectiveId, m.id)}
+                        onDelete={() => effectiveId && removeMessage(effectiveId, m.id)}
+                      />
+                    </div>
                   );
                 })}
 
@@ -349,55 +408,103 @@ const ChatRoomPage: React.FC = () => {
         )}
       </main>
 
-      {rightOpen && activeChatroom && (
-        <aside className="hidden w-72 flex-shrink-0 flex-col border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 lg:flex">
-          <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Room info</h3>
-            {activeChatroom.description && (
-              <p className="mt-1 text-xs text-slate-500">{activeChatroom.description}</p>
-            )}
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Agents ({activeChatroom.agentIds.length})
-            </h4>
-            <ul className="space-y-2">
-              {activeChatroom.agentIds.map((id) => {
-                const a = agentsById.get(id);
-                if (!a) return null;
-                return (
-                  <li
-                    key={id}
-                    className="flex items-center gap-2 rounded p-2 hover:bg-slate-50 dark:hover:bg-slate-700/40"
-                  >
-                    <span
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
-                      style={{ backgroundColor: a.color ?? '#6366f1' }}
-                    >
-                      {getInitial(a.name)}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-                        {a.name}
-                      </p>
-                      <p className="truncate text-xs text-slate-500">{a.role}</p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-          <div className="border-t border-slate-200 p-3 dark:border-slate-700">
-            <button
-              type="button"
-              onClick={() => navigate(`/memories?agentId=${activeChatroom.agentIds[0] ?? ''}`)}
-              disabled={activeChatroom.agentIds.length === 0}
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-            >
-              <Brain size={14} />
-              View memories
-            </button>
-          </div>
+      {(rightOpen || searchOpen) && activeChatroom && (
+        <aside className="hidden w-72 flex-shrink-0 flex-col border-l border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:flex">
+          {searchOpen ? (
+            <>
+              <div className="flex flex-shrink-0 items-center gap-2 border-b border-slate-200 px-3 py-2.5 dark:border-zinc-800">
+                <Search size={14} className="flex-shrink-0 text-slate-400" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search messages…"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder-slate-400 dark:text-slate-100"
+                />
+                {searchLoading && <Loader2 size={13} className="animate-spin text-slate-400" />}
+                <button type="button" onClick={() => setSearchOpen(false)} className="rounded p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto scrollbar-thin">
+                {!searchQuery.trim() ? (
+                  <p className="px-4 py-6 text-center text-xs text-slate-400">Type to search messages</p>
+                ) : searchResults.length === 0 && !searchLoading ? (
+                  <p className="px-4 py-6 text-center text-xs text-slate-400">No messages found</p>
+                ) : (
+                  <ul className="divide-y divide-slate-100 dark:divide-slate-700">
+                    {searchResults.map((msg) => {
+                      const a = agentsById.get(msg.senderId);
+                      return (
+                        <li key={msg.id}>
+                          <button
+                            type="button"
+                            onClick={() => scrollToMessage(msg.id)}
+                            className="w-full px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/40"
+                          >
+                            <p className="mb-0.5 text-[11px] font-medium text-slate-500">
+                              {msg.senderType === 'user' ? 'You' : (a?.name ?? 'Agent')} · {formatRelative(msg.createdAt)}
+                            </p>
+                            <p className="line-clamp-2 text-xs text-slate-700 dark:text-slate-200">
+                              {msg.content || '(tool call)'}
+                            </p>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="border-b border-slate-200 px-4 py-3 dark:border-zinc-800">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Room info</h3>
+                {activeChatroom.description && (
+                  <p className="mt-1 text-xs text-slate-500">{activeChatroom.description}</p>
+                )}
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Agents ({activeChatroom.agentIds.length})
+                </h4>
+                <ul className="space-y-2">
+                  {activeChatroom.agentIds.map((id) => {
+                    const a = agentsById.get(id);
+                    if (!a) return null;
+                    return (
+                      <li
+                        key={id}
+                        className="flex items-center gap-2 rounded p-2 hover:bg-slate-50 dark:hover:bg-slate-700/40"
+                      >
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-bold text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-300">
+                          {getInitial(a.name)}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                            {a.name}
+                          </p>
+                          <p className="truncate text-xs text-slate-500">{a.role}</p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+              <div className="border-t border-slate-200 p-3 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/memories?agentId=${activeChatroom.agentIds[0] ?? ''}`)}
+                  disabled={activeChatroom.agentIds.length === 0}
+                  className="flex w-full items-center justify-center gap-2 rounded-md bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50 dark:bg-zinc-800 dark:text-slate-200 dark:hover:bg-zinc-700"
+                >
+                  <Brain size={14} />
+                  View memories
+                </button>
+              </div>
+            </>
+          )}
         </aside>
       )}
 
@@ -421,32 +528,27 @@ const ChatRoomPage: React.FC = () => {
 
 const EmptyChat: React.FC<{ onCreate: () => void }> = ({ onCreate }) => (
   <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-    <div className="relative mb-6">
-      <div className="absolute inset-0 -m-4 rounded-full bg-gradient-to-br from-primary-400/20 to-purple-400/20 blur-2xl" />
-      <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 text-white shadow-xl shadow-primary-500/30 animate-float">
-        <MessageSquare size={40} strokeWidth={1.8} />
-      </div>
+    <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-400 animate-float dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-500">
+      <MessageSquare size={26} strokeWidth={1.8} />
     </div>
-    <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-      Select a chatgrub
-    </h2>
+    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Select a chatgrub</h2>
     <p className="mt-2 max-w-sm text-sm text-slate-500">
       Pick a chatgrub from the left sidebar or create a new one to start chatting with your agents.
     </p>
-    <div className="mt-6 flex gap-2">
-      <Button variant="primary" onClick={onCreate} leftIcon={<Plus size={16} />}>
+    <div className="mt-5">
+      <Button variant="primary" onClick={onCreate} leftIcon={<Plus size={14} />}>
         New chatgrub
       </Button>
     </div>
-    <div className="mt-10 grid max-w-md grid-cols-3 gap-3 text-center">
+    <div className="mt-8 grid max-w-sm grid-cols-3 gap-2 text-center">
       {[
-        { emoji: '💬', label: 'Multi-agent chat' },
+        { emoji: '💬', label: 'Multi-agent' },
         { emoji: '🧠', label: 'Long memory' },
         { emoji: '⚡', label: 'Custom LLM' },
       ].map((item) => (
-        <div key={item.label} className="rounded-xl border border-slate-200/60 bg-white/50 p-3 backdrop-blur dark:border-slate-800/60 dark:bg-slate-900/50">
-          <div className="text-2xl">{item.emoji}</div>
-          <p className="mt-1 text-xs font-medium text-slate-700 dark:text-slate-300">{item.label}</p>
+        <div key={item.label} className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+          <div className="text-xl">{item.emoji}</div>
+          <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-400">{item.label}</p>
         </div>
       ))}
     </div>
@@ -585,7 +687,7 @@ const CreateChatRoomModal: React.FC<CreateChatRoomModalProps> = ({ open, onClose
             ) : agents.length === 0 ? (
               <p className="text-xs text-slate-500">No agents available. Create one first.</p>
             ) : (
-              <div className="grid max-h-56 grid-cols-1 gap-1.5 overflow-y-auto rounded border border-slate-200 p-2 dark:border-slate-700 sm:grid-cols-2">
+              <div className="grid max-h-56 grid-cols-1 gap-1.5 overflow-y-auto rounded border border-slate-200 p-2 dark:border-zinc-800 sm:grid-cols-2">
                 {agents.map((a) => (
                   <label
                     key={a.id}
@@ -597,8 +699,7 @@ const CreateChatRoomModal: React.FC<CreateChatRoomModalProps> = ({ open, onClose
                       onChange={() => toggle(a.id)}
                     />
                     <span
-                      className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
-                      style={{ backgroundColor: a.color ?? '#6366f1' }}
+                      className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-bold text-slate-700 dark:border-zinc-700 dark:bg-zinc-700 dark:text-slate-300"
                     >
                       {getInitial(a.name)}
                     </span>
@@ -709,13 +810,12 @@ const EditChatRoomModal: React.FC<EditChatRoomModalProps> = ({ open, onClose, on
             ) : agents.length === 0 ? (
               <p className="text-xs text-slate-500">No agents available.</p>
             ) : (
-              <div className="grid max-h-56 grid-cols-1 gap-1.5 overflow-y-auto rounded border border-slate-200 p-2 dark:border-slate-700 sm:grid-cols-2">
+              <div className="grid max-h-56 grid-cols-1 gap-1.5 overflow-y-auto rounded border border-slate-200 p-2 dark:border-zinc-800 sm:grid-cols-2">
                 {agents.map((a) => (
                   <label key={a.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/40">
                     <input type="checkbox" checked={selected.includes(a.id)} onChange={() => toggle(a.id)} />
                     <span
-                      className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
-                      style={{ backgroundColor: a.color ?? '#6366f1' }}
+                      className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-bold text-slate-700 dark:border-zinc-700 dark:bg-zinc-700 dark:text-slate-300"
                     >
                       {getInitial(a.name)}
                     </span>

@@ -39,23 +39,6 @@
 // the API. If that still fails we fall back to the standard
 // `require('electron')` and, as a last resort, try the global electron API
 // that Electron injects into the main process.
-// Electron API resolution.
-//
-// The `electron` npm package's `index.js` exports the path to the Electron
-// binary as a string. In a real Electron main process, the runtime is
-// supposed to intercept `require('electron')` and replace that stub with
-// the actual API. However, in some environments (notably when the compiled
-// code lives under `dist-main/` and the package layout confuses the
-// interception), `require('electron')` still returns the path string,
-// causing every property access to be undefined.
-//
-// To be robust across all environments, we resolve the Electron API by
-// using the Electron binary's own loader: we resolve the path from
-// `node_modules/electron/path.txt`, then `require()` that path with the
-// `ELECTRON_MODULE_PATH` magic that asks the Electron binary to hand back
-// the API. If that still fails we fall back to the standard
-// `require('electron')` and, as a last resort, try the global electron API
-// that Electron injects into the main process.
 import { app, BrowserWindow } from 'electron';
 
 import { TypedEventEmitter } from './orchestrator/types';
@@ -247,17 +230,6 @@ async function boot(): Promise<void> {
   windowManager.createMainWindow();
 
   log.info('boot complete');
-}
-
-/* -------------------------------------------------------------------------- */
-/* Window manager lazy reference                                               */
-/* -------------------------------------------------------------------------- */
-
-function windowManagerRef(): WindowManager {
-  if (!windowManager) {
-    windowManager = new WindowManager();
-  }
-  return windowManager;
 }
 
 /* -------------------------------------------------------------------------- */

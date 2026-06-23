@@ -1,0 +1,87 @@
+project:
+  name: "office-ai-agent"
+  description: "Office AI Agent — cross-platform Electron desktop app with custom agents, skills, chatrooms, and teams"
+  created: "2026-06-23T00:00:00Z"
+  fire_version: "0.1.8"
+
+workspace:
+  type: brownfield
+  structure: monolith
+  autonomy_bias: balanced
+  scanned_at: "2026-06-23T00:00:00Z"
+
+intents:
+  - id: bug-fix-audit
+    title: "Bug Fix & Error Audit"
+    status: completed
+    work_items:
+      - id: fix-unwrap-void
+        status: completed
+        complexity: low
+        mode: autopilot
+      - id: fix-orchestrator-event-types
+        status: completed
+        complexity: low
+        mode: autopilot
+      - id: cleanup-main-dead-code
+        status: completed
+        complexity: low
+        mode: autopilot
+
+  - id: agent-management
+    title: "Agent Management — Duplicate, Export, Import"
+    status: completed
+    work_items:
+      - id: backend-ipc-handlers
+        status: completed
+        complexity: low
+        mode: autopilot
+      - id: frontend-ui
+        status: completed
+        complexity: low
+        mode: autopilot
+        depends_on: [backend-ipc-handlers]
+
+  - id: chat-search
+    title: "Chat Search — Cari pesan dalam history chatroom"
+    status: completed
+    work_items:
+      - id: chat-search-ui
+        status: completed
+        complexity: low
+        mode: autopilot
+
+  - id: terminal-page
+    title: "Terminal Page"
+    status: completed
+    work_items:
+      - id: terminal-page-impl
+        status: completed
+        complexity: low
+        mode: autopilot
+
+  - id: message-regenerate
+    title: "Message Regenerate"
+    status: completed
+    work_items:
+      - id: regenerate-backend
+        status: completed
+        complexity: low
+        mode: autopilot
+      - id: regenerate-ui
+        status: completed
+        complexity: low
+        mode: autopilot
+
+  - id: quick-fixes
+    title: "Quick Fixes — TopBar titles"
+    status: completed
+    work_items:
+      - id: topbar-titles
+        status: completed
+        complexity: low
+        mode: autopilot
+
+runs:
+  active: []
+  completed: []

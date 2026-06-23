@@ -26,9 +26,9 @@ const ROLE_OPTIONS: Array<{ value: AgentRole; label: string }> = [
 ];
 
 const COLOR_OPTIONS = [
-  '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#ef4444',
-  '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981',
-  '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#a855f7',
+  '#64748b', '#475569', '#334155', '#1e293b', '#0f172a',
+  '#6b7280', '#4b5563', '#374151', '#1f2937', '#111827',
+  '#78716c', '#57534e', '#44403c', '#292524', '#1c1917',
 ];
 
 const EMPTY: AgentFormData = {
@@ -39,7 +39,7 @@ const EMPTY: AgentFormData = {
   providerId: '',
   teamId: '',
   role: 'member',
-  color: '#6366f1',
+  color: '#64748b',
   isLead: false,
   enabledSkills: [],
   temperature: 0.7,
@@ -70,7 +70,7 @@ const AgentEditor: React.FC<AgentEditorProps> = ({
         providerId: agent.providerId,
         teamId: agent.teamId ?? '',
         role: agent.role,
-        color: agent.color ?? '#6366f1',
+        color: agent.color ?? '#64748b',
         isLead: agent.isLead ?? false,
         enabledSkills: agent.enabledSkills ?? [],
         temperature: agent.temperature ?? 0.7,
@@ -191,9 +191,9 @@ const AgentEditor: React.FC<AgentEditorProps> = ({
         )}
 
         {appliedTemplate && !agent && (
-          <div className="flex items-center justify-between gap-3 rounded-md border border-primary-200 bg-primary-50 px-3 py-2 text-sm dark:border-primary-800 dark:bg-primary-900/20">
+          <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800/50">
             <div className="flex min-w-0 items-center gap-2">
-              <Sparkles size={14} className="flex-shrink-0 text-primary-600 dark:text-primary-400" />
+              <Sparkles size={14} className="flex-shrink-0 text-slate-500 dark:text-slate-400" />
               <span
                 className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-sm"
                 style={{ backgroundColor: `${appliedTemplate.color}33` }}
@@ -202,10 +202,10 @@ const AgentEditor: React.FC<AgentEditorProps> = ({
                 {appliedTemplate.emoji}
               </span>
               <div className="min-w-0">
-                <div className="truncate font-medium text-primary-800 dark:text-primary-200">
+                <div className="truncate font-medium text-slate-800 dark:text-slate-200">
                   Based on template: {appliedTemplate.name}
                 </div>
-                <div className="truncate text-xs text-primary-700/80 dark:text-primary-300/80">
+                <div className="truncate text-xs text-slate-500 dark:text-slate-400">
                   {appliedTemplate.tagline}
                 </div>
               </div>

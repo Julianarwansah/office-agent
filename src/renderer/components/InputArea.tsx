@@ -174,14 +174,14 @@ const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
   const mentionedAgents = agents.filter((a) => mentions.includes(a.id));
 
   return (
-    <div className="border-t border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800" ref={containerRef}>
+    <div className="border-t border-slate-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-800" ref={containerRef}>
       {(mentionAll || mentionedAgents.length > 0) && (
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
           <span className="flex items-center gap-1 text-xs text-slate-500">
             <AtSign size={12} /> Mentioning:
           </span>
           {mentionAll ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-900/30 dark:text-violet-300">
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-zinc-800 dark:text-slate-300">
               <Users size={11} />
               All agents ({agents.length})
             </span>
@@ -189,12 +189,12 @@ const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
             mentionedAgents.map((a) => (
               <span
                 key={a.id}
-                className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-0.5 text-xs text-primary-800 dark:bg-primary-900/30 dark:text-primary-300"
+                className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-800 dark:bg-zinc-800 dark:text-slate-300"
                 title={a.description ?? a.name}
               >
                 <span
                   className="flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                  style={{ backgroundColor: a.color ?? '#6366f1' }}
+                  style={{ backgroundColor: '#64748b' }}
                 >
                   {getInitial(a.name)}
                 </span>
@@ -207,21 +207,21 @@ const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
 
       <div className="relative">
         {mention.active && (showAllOption || filteredAgents.length > 0) && (
-          <div className="absolute bottom-full left-0 z-10 mb-2 max-h-64 w-72 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg scrollbar-thin dark:border-slate-700 dark:bg-slate-800">
-            <div className="border-b border-slate-100 px-3 py-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+          <div className="absolute bottom-full left-0 z-10 mb-2 max-h-64 w-72 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg scrollbar-thin dark:border-zinc-700 dark:bg-zinc-800">
+            <div className="border-b border-slate-100 px-3 py-2 text-xs text-slate-500 dark:border-zinc-700 dark:text-slate-400">
               Mention agent
             </div>
             {showAllOption && (
               <button
                 type="button"
                 onClick={pickAll}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-zinc-700/60"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-600 text-white">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-700 text-white dark:bg-zinc-600">
                   <Users size={14} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold text-violet-700 dark:text-violet-300">@all</div>
+                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">@all</div>
                   <div className="text-xs text-slate-500 dark:text-slate-400">
                     Mention all {agents.length} agents
                   </div>
@@ -237,7 +237,7 @@ const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
               >
                 <span
                   className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white"
-                  style={{ backgroundColor: a.color ?? '#6366f1' }}
+                  style={{ backgroundColor: '#64748b' }}
                 >
                   {getInitial(a.name)}
                 </span>
@@ -254,7 +254,7 @@ const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
 
         <div
           className={cn(
-            'flex items-end gap-2 rounded-lg border border-slate-300 bg-white p-2 focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-500 dark:border-slate-600 dark:bg-slate-800',
+            'flex items-end gap-2 rounded-lg border border-slate-200 bg-white p-2 focus-within:border-slate-400 focus-within:ring-1 focus-within:ring-slate-200 dark:border-zinc-700 dark:bg-zinc-800',
             disabled && 'opacity-60',
           )}
         >
@@ -283,7 +283,7 @@ const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
               type="button"
               onClick={handleSend}
               disabled={!value.trim() || disabled}
-              className="flex h-9 items-center gap-1.5 rounded-md bg-primary-600 px-3 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+              className="flex h-9 items-center gap-1.5 rounded-md bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
               title="Send (Enter)"
             >
               <Send size={14} />

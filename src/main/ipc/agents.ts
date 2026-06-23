@@ -71,6 +71,90 @@ export function registerAgentHandlers(deps: AgentHandlerDeps): void {
     } catch (err) { return failErr('AGENT.SET_SKILLS', err); }
   });
 
+  ipcMain.handle(IPC_CHANNELS.AGENT.DUPLICATE, async (
+    _evt,
+    id: string,
+  ): Promise<ApiResponse<Agent>> => {
+    try {
+      if (!id || typeof id !== 'string') return fail('id is required');
+      const source = agentRepo.findById(id);
+      if (!source) return fail(`Agent not found: ${id}`);
+      const created = agentRepo.create({
+        name: `Copy of ${source.name}`,
+        description: source.description,
+        avatar: source.avatar,
+        systemPrompt: source.systemPrompt,
+        providerId: source.providerId,
+        teamId: source.teamId,
+        role: source.role,
+        color: source.color,
+        isLead: source.isLead,
+        temperature: source.temperature,
+        maxTokens: source.maxTokens,
+        enabledSkills: source.enabledSkills,
+      });
+      return ok(created);
+    } catch (err) { return failErr('AGENT.DUPLICATE', err); }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.AGENT.EXPORT, async (
+    _evt,
+    id: string,
+  ): Promise<ApiResponse<{ json: string }>> => {
+    try {
+      if (!id || typeof id !== 'string') return fail('id is required');
+      const agent = agentRepo.findById(id);
+      if (!agent) return fail(`Agent not found: ${id}`);
+      const exportable = {
+        name: agent.name,
+        description: agent.description,
+        avatar: agent.avatar,
+        systemPrompt: agent.systemPrompt,
+        providerId: agent.providerId,
+        teamId: agent.teamId,
+        role: agent.role,
+        color: agent.color,
+        isLead: agent.isLead,
+        temperature: agent.temperature,
+        maxTokens: agent.maxTokens,
+        enabledSkills: agent.enabledSkills,
+      };
+      return ok({ json: JSON.stringify(exportable, null, 2) });
+    } catch (err) { return failErr('AGENT.EXPORT', err); }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.AGENT.IMPORT, async (
+    _evt,
+    args: { json: string },
+  ): Promise<ApiResponse<Agent>> => {
+    try {
+      if (!args?.json || typeof args.json !== 'string') return fail('json is required');
+      let parsed: Record<string, unknown>;
+      try {
+        parsed = JSON.parse(args.json);
+      } catch {
+        return fail('Invalid JSON');
+      }
+      if (!parsed.name || typeof parsed.name !== 'string') return fail('Field "name" is required');
+      if (!parsed.providerId || typeof parsed.providerId !== 'string') return fail('Field "providerId" is required');
+      const input = sanitizeAgentInput(parsed as Partial<Agent>);
+      if (!input.name) return fail('Agent name is empty after sanitization');
+      if (!input.providerId) return fail('providerId is required');
+      const skills = Array.isArray(parsed.enabledSkills)
+        ? (parsed.enabledSkills as AgentSkill[])
+        : [];
+      const created = agentRepo.create({
+        ...input,
+        name: input.name,
+        providerId: input.providerId,
+        systemPrompt: typeof input.systemPrompt === 'string' ? input.systemPrompt : '',
+        role: input.role ?? 'member',
+        enabledSkills: skills,
+      });
+      return ok(created);
+    } catch (err) { return failErr('AGENT.IMPORT', err); }
+  });
+
   /* ------------------------------- Teams -------------------------------- */
 
   ipcMain.handle(IPC_CHANNELS.TEAM.LIST, async (): Promise<ApiResponse<Team[]>> => {

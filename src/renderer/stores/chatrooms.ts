@@ -26,6 +26,7 @@ interface ChatRoomsState {
 
   loadMessages: (chatRoomId: string) => Promise<void>;
   appendMessage: (chatRoomId: string, msg: Message | null) => void;
+  removeMessage: (chatRoomId: string, messageId: string) => void;
 
   sendMessage: (params: ChatSendParams) => Promise<void>;
   clearMessages: (chatRoomId: string) => Promise<void>;
@@ -147,6 +148,18 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
         messagesByRoom: {
           ...s.messagesByRoom,
           [chatRoomId]: [...existing, msg],
+        },
+      };
+    });
+  },
+
+  removeMessage: (chatRoomId, messageId) => {
+    set((s) => {
+      const existing = s.messagesByRoom[chatRoomId] ?? [];
+      return {
+        messagesByRoom: {
+          ...s.messagesByRoom,
+          [chatRoomId]: existing.filter((m) => m.id !== messageId),
         },
       };
     });

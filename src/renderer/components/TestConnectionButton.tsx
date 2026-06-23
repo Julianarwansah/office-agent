@@ -66,7 +66,7 @@ const TestConnectionButton: React.FC<TestConnectionButtonProps> = ({
 
   const variantClass =
     variant === 'primary'
-      ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-sm shadow-primary-500/25 hover:from-primary-600 hover:to-primary-700'
+      ? 'bg-slate-900 text-white shadow-sm hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100'
       : variant === 'ghost'
         ? 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/70'
         : 'bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 hover:ring-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-700 dark:hover:ring-slate-600';
@@ -103,13 +103,7 @@ export const TestResultDisplay: React.FC<TestResultDisplayProps> = ({ result, co
     <span
       className={cn(
         'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-mono text-[10px] font-medium',
-        ok
-          ? result.latencyMs < 1000
-            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-            : result.latencyMs < 3000
-              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-              : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+        'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
       )}
     >
       <Zap size={9} />
@@ -123,7 +117,7 @@ export const TestResultDisplay: React.FC<TestResultDisplayProps> = ({ result, co
         className={cn(
           'flex items-center gap-2 rounded-md px-2 py-1 text-[11px]',
           ok
-            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'
+            ? 'bg-slate-50 text-slate-700 dark:bg-zinc-800/60 dark:text-slate-300'
             : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300',
         )}
       >
@@ -161,8 +155,8 @@ export const TestResultDisplay: React.FC<TestResultDisplayProps> = ({ result, co
       className={cn(
         'rounded-lg border p-3 text-sm',
         ok
-          ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-50/40 dark:border-emerald-800/60 dark:from-emerald-950/30 dark:to-emerald-950/10'
-          : 'border-red-200 bg-gradient-to-br from-red-50 to-red-50/40 dark:border-red-800/60 dark:from-red-950/30 dark:to-red-950/10',
+          ? 'border-slate-200 bg-slate-50 dark:border-zinc-700 dark:bg-zinc-800/50'
+          : 'border-red-200 bg-red-50 dark:border-red-800/60 dark:bg-red-950/20',
       )}
     >
       <div className="flex items-center gap-2">
@@ -170,7 +164,7 @@ export const TestResultDisplay: React.FC<TestResultDisplayProps> = ({ result, co
           className={cn(
             'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg',
             ok
-              ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400'
+              ? 'bg-slate-100 text-slate-700 dark:bg-zinc-700 dark:text-slate-300'
               : 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400',
           )}
         >
@@ -182,7 +176,7 @@ export const TestResultDisplay: React.FC<TestResultDisplayProps> = ({ result, co
               className={cn(
                 'font-semibold',
                 ok
-                  ? 'text-emerald-900 dark:text-emerald-200'
+                  ? 'text-slate-900 dark:text-slate-100'
                   : 'text-red-900 dark:text-red-200',
               )}
             >
@@ -194,7 +188,7 @@ export const TestResultDisplay: React.FC<TestResultDisplayProps> = ({ result, co
             className={cn(
               'mt-0.5 text-xs',
               ok
-                ? 'text-emerald-800 dark:text-emerald-300'
+                ? 'text-slate-700 dark:text-slate-300'
                 : 'text-red-800 dark:text-red-300',
             )}
           >
@@ -209,7 +203,7 @@ export const TestResultDisplay: React.FC<TestResultDisplayProps> = ({ result, co
                 className={cn(
                   'rounded p-1 transition-colors',
                   ok
-                    ? 'text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/40'
+                    ? 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-zinc-700'
                     : 'text-red-700 hover:bg-red-100 dark:text-red-300 dark:hover:bg-red-900/40',
                 )}
                 title="Retry"
@@ -223,7 +217,7 @@ export const TestResultDisplay: React.FC<TestResultDisplayProps> = ({ result, co
                 className={cn(
                   'rounded p-1 transition-colors',
                   ok
-                    ? 'text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/40'
+                    ? 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-zinc-700'
                     : 'text-red-700 hover:bg-red-100 dark:text-red-300 dark:hover:bg-red-900/40',
                 )}
                 title="Clear"
@@ -252,8 +246,8 @@ export const TestConnectionStatus: React.FC<TestConnectionStatusProps> = ({ labe
         {status === 'testing' && <Loader2 size={12} className="animate-spin text-slate-400" />}
         {status === 'ok' && (
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-slate-400 opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-slate-500" />
           </span>
         )}
         {status === 'error' && <X size={12} className="text-red-500" />}

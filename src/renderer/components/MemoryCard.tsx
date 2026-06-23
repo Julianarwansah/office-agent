@@ -26,11 +26,11 @@ const TYPE_LABELS: Record<Memory['type'], string> = {
 };
 
 const CATEGORY_COLORS: Record<Memory['category'], string> = {
-  user_preference: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-  fact: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  instruction: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  context: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
-  task: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  user_preference: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
+  fact: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
+  instruction: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
+  context: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
+  task: 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-slate-300',
 };
 
 const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onEdit, onDelete, onTogglePin }) => {
@@ -44,7 +44,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onEdit, onDelete, onTog
     <div
       className={cn(
         'card group relative flex flex-col gap-2 p-4 transition-shadow hover:shadow-md',
-        memory.isPinned && 'ring-1 ring-primary-300 dark:ring-primary-700',
+        memory.isPinned && 'ring-1 ring-slate-300 dark:ring-zinc-600',
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -56,7 +56,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onEdit, onDelete, onTog
             {TYPE_LABELS[memory.type]}
           </span>
           {memory.isPinned && (
-            <span className="badge bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300">
+            <span className="badge-neutral">
               <Pin size={10} className="mr-1" /> Pinned
             </span>
           )}
@@ -67,7 +67,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onEdit, onDelete, onTog
               type="button"
               onClick={() => onTogglePin(memory)}
               className={`rounded p-1 hover:bg-slate-100 dark:hover:bg-slate-700 ${
-                memory.isPinned ? 'text-primary-600' : 'text-slate-500'
+                memory.isPinned ? 'text-slate-700' : 'text-slate-500'
               }`}
               title={memory.isPinned ? 'Unpin' : 'Pin'}
             >
@@ -109,7 +109,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onEdit, onDelete, onTog
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="self-start text-xs text-primary-600 hover:underline dark:text-primary-400"
+          className="self-start text-xs text-slate-600 hover:underline dark:text-slate-400"
         >
           {expanded ? 'Show less' : 'Show more'}
         </button>
@@ -128,7 +128,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onEdit, onDelete, onTog
             <div
               className={cn(
                 'h-full rounded-full',
-                importance > 0.7 ? 'bg-green-500' : importance > 0.4 ? 'bg-amber-500' : 'bg-slate-400',
+                importance > 0.7 ? 'bg-slate-700' : importance > 0.4 ? 'bg-slate-400' : 'bg-slate-200',
               )}
               style={{ width: `${importancePct}%` }}
             />
@@ -139,7 +139,7 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onEdit, onDelete, onTog
 
       {memory.accessCount > 10 && (
         <div className="absolute right-2 top-2">
-          <AlertTriangle size={12} className="text-amber-500" />
+          <AlertTriangle size={12} className="text-slate-500" />
         </div>
       )}
     </div>
