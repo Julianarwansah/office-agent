@@ -166,6 +166,13 @@ export function buildSystemPrompt(opts: BuildSystemPromptOptions): string {
       `For greetings, casual conversation, simple questions, or anything you can answer from knowledge — respond directly WITHOUT calling any tool.\n` +
       `Never call a tool just because it is available. Prefer a direct answer whenever possible.`,
     );
+  } else {
+    sections.push(
+      `## Response Mode\n` +
+      `No tools are available right now. Respond directly and conversationally based on your knowledge.\n` +
+      `Do NOT attempt to delegate, run commands, search the web, or call any tool — simply give a helpful, direct answer.\n` +
+      `You MUST always write a response. Never return an empty reply.`,
+    );
   }
 
   const date = now ?? new Date();

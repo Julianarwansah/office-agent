@@ -9,6 +9,7 @@ import {
   Send,
   AlertTriangle,
   ChevronRight,
+  Pencil,
 } from 'lucide-react';
 import { useChatRoomsStore } from '../stores/chatrooms';
 import { useAgentsStore } from '../stores/agents';
@@ -42,6 +43,7 @@ const ChatRoomPage: React.FC = () => {
   const sendMessage = useChatRoomsStore((s) => s.sendMessage);
   const cancelStream = useChatRoomsStore((s) => s.cancelStream);
   const createChatRoom = useChatRoomsStore((s) => s.createChatRoom);
+  const updateChatRoom = useChatRoomsStore((s) => s.updateChatRoom);
   const deleteChatRoom = useChatRoomsStore((s) => s.deleteChatRoom);
   const loadChatrooms = useChatRoomsStore((s) => s.loadChatrooms);
   const chatroomsLoading = useChatRoomsStore((s) => s.loading);
@@ -54,6 +56,7 @@ const ChatRoomPage: React.FC = () => {
   const agentsError = useAgentsStore((s) => s.error);
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(true);
 
   const effectiveId = chatRoomId ?? currentChatRoomId ?? null;
@@ -124,6 +127,12 @@ const ChatRoomPage: React.FC = () => {
     const created = await createChatRoom(data);
     setCreateOpen(false);
     navigate(`/chat/${created.id}`);
+  }
+
+  async function handleEdit(data: ChatRoomFormData) {
+    if (!activeChatroom) return;
+    await updateChatRoom(activeChatroom.id, data);
+    setEditOpen(false);
   }
 
   async function handleDelete(id: string) {
@@ -227,6 +236,14 @@ const ChatRoomPage: React.FC = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                  title="Edit chatgrub"
+                >
+                  <Pencil size={15} />
+                </button>
                 <button
                   type="button"
                   onClick={() => setRightOpen((v) => !v)}
@@ -389,6 +406,15 @@ const ChatRoomPage: React.FC = () => {
         onClose={() => setCreateOpen(false)}
         onSave={handleCreate}
       />
+
+      {activeChatroom && (
+        <EditChatRoomModal
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          onSave={handleEdit}
+          chatroom={activeChatroom}
+        />
+      )}
     </div>
   );
 };
@@ -570,6 +596,123 @@ const CreateChatRoomModal: React.FC<CreateChatRoomModalProps> = ({ open, onClose
                       checked={selected.includes(a.id)}
                       onChange={() => toggle(a.id)}
                     />
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
+                      style={{ backgroundColor: a.color ?? '#6366f1' }}
+                    >
+                      {getInitial(a.name)}
+                    </span>
+                    <span className="truncate text-sm">{a.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </form>
+    </Modal>
+  );
+};
+
+interface EditChatRoomModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (data: ChatRoomFormData) => Promise<void>;
+  chatroom: import('../../shared/types').ChatRoom;
+}
+
+const EditChatRoomModal: React.FC<EditChatRoomModalProps> = ({ open, onClose, onSave, chatroom }) => {
+  const agents = useAgentsStore((s) => s.agents);
+  const agentsLoading = useAgentsStore((s) => s.loadingAgents);
+  const [name, setName] = useState(chatroom.name);
+  const [description, setDescription] = useState(chatroom.description ?? '');
+  const [type, setType] = useState<ChatRoomType>(chatroom.type);
+  const [selected, setSelected] = useState<string[]>(chatroom.agentIds);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setName(chatroom.name);
+      setDescription(chatroom.description ?? '');
+      setType(chatroom.type);
+      setSelected(chatroom.agentIds);
+      setError(null);
+    }
+  }, [open, chatroom]);
+
+  function handleTypeChange(value: string) {
+    const nextType = value as ChatRoomType;
+    setType(nextType);
+    if (nextType === 'direct') setSelected((s) => s.slice(0, 1));
+  }
+
+  function toggle(id: string) {
+    setSelected((s) => {
+      if (type === 'direct') return s.includes(id) ? [] : [id];
+      return s.includes(id) ? s.filter((x) => x !== id) : [...s, id];
+    });
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!name.trim()) { setError('Name is required.'); return; }
+    if (selected.length === 0 && type !== 'global') { setError('Please select at least one agent.'); return; }
+    if (type === 'direct' && selected.length !== 1) { setError('Direct chatgrub requires exactly one agent.'); return; }
+    setSubmitting(true);
+    try {
+      await onSave({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        type,
+        agentIds: selected,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update chatgrub');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Edit Chatgrub"
+      size="lg"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={submitting}>Cancel</Button>
+          <Button variant="primary" type="submit" form="edit-chatroom-form" loading={submitting} leftIcon={<Send size={14} />}>
+            Save
+          </Button>
+        </>
+      }
+    >
+      <form id="edit-chatroom-form" onSubmit={submit} className="space-y-4">
+        {error && (
+          <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
+            {error}
+          </div>
+        )}
+        <Input label="Name *" value={name} onChange={setName} placeholder="Product brainstorm" required />
+        <Textarea label="Description" value={description} onChange={setDescription} placeholder="What is this chat about?" rows={2} />
+        <Select label="Type" value={type} onChange={handleTypeChange} options={TYPE_OPTIONS} />
+        {type !== 'global' && (
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Agents ({selected.length})
+            </label>
+            {agentsLoading && agents.length === 0 ? (
+              <p className="text-xs text-slate-500">Loading agents…</p>
+            ) : agents.length === 0 ? (
+              <p className="text-xs text-slate-500">No agents available.</p>
+            ) : (
+              <div className="grid max-h-56 grid-cols-1 gap-1.5 overflow-y-auto rounded border border-slate-200 p-2 dark:border-slate-700 sm:grid-cols-2">
+                {agents.map((a) => (
+                  <label key={a.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                    <input type="checkbox" checked={selected.includes(a.id)} onChange={() => toggle(a.id)} />
                     <span
                       className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
                       style={{ backgroundColor: a.color ?? '#6366f1' }}
