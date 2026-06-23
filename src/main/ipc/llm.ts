@@ -9,7 +9,7 @@
 
 import { ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../../shared/types';
-import { PRESET_PROVIDERS, modelSuggestions } from '../../shared/llm-providers';
+import { PRESET_PROVIDERS } from '../../shared/llm-providers';
 import type { ApiResponse, LLMProvider } from '../../shared/types';
 import type { ProviderManager } from '../llm';
 import type { LLMProviderRepository } from '../db/repositories';
@@ -138,9 +138,9 @@ export function registerLLMHandlers(deps: LLMHandlerDeps): void {
     }
   });
 
-  ipcMain.handle(IPC_CHANNELS.LLM.PRESETS, async (): Promise<ApiResponse<{ presets: typeof PRESET_PROVIDERS; suggestions: typeof modelSuggestions }>> => {
+  ipcMain.handle(IPC_CHANNELS.LLM.PRESETS, async (): Promise<ApiResponse<{ presets: typeof PRESET_PROVIDERS }>> => {
     try {
-      return ok({ presets: PRESET_PROVIDERS, suggestions: modelSuggestions });
+      return ok({ presets: PRESET_PROVIDERS });
     } catch (err) {
       return fail(errMsg(err));
     }

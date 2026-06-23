@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import path from 'node:path';
 
 export default defineConfig({
   plugins: [react()],
@@ -14,6 +14,15 @@ export default defineConfig({
   build: {
     outDir: 'dist-renderer',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom', 'zustand'],
+          markdown: ['marked', 'highlight.js'],
+          icons: ['lucide-react'],
+        },
+      },
+    },
   },
   server: {
     port: 5173,

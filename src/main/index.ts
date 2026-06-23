@@ -158,6 +158,7 @@ async function boot(): Promise<void> {
   //      instance for the IPC handlers' consolidate/extract paths.
   const eventBus = new TypedEventEmitter<OrchestratorEventMap>();
   const activeChatRoomId = trackActiveChatRoom();
+  windowManager = new WindowManager();
 
   orchestrator = new Orchestrator({
     db: getDb() as unknown as import('./orchestrator/types').OrchestratorDatabase,
@@ -207,7 +208,7 @@ async function boot(): Promise<void> {
   (orchestrator as unknown as { deps: { skillExecutor: import('./orchestrator/types').SkillExecutorLike } }).deps.skillExecutor = skillExecutor;
 
   // 9. Subscribe to all orchestrator events and forward to the renderer.
-  wireOrchestratorEvents(orchestrator, windowManagerRef(), eventBus, activeChatRoomId);
+  wireOrchestratorEvents(orchestrator, windowManager, eventBus, activeChatRoomId);
 
   // 10. Local-only HTTP server.
   const appSettings = repos.settings.getAppSettings();
@@ -218,11 +219,8 @@ async function boot(): Promise<void> {
     log.error('failed to start local server', err);
   }
 
-  // 11. Window.
-  windowManager = new WindowManager();
-  windowManager.createMainWindow();
-
-  // 12. IPC handlers.
+  // 11. IPC handlers. Register before loading the renderer so early
+  //     renderer invokes cannot race handler registration.
   if (!providerManager || !skillRegistry || !memoryManager || !orchestrator
       || !skillExecutor || !localServer || !windowManager) {
     throw new Error('internal: missing global after init');
@@ -239,6 +237,9 @@ async function boot(): Promise<void> {
     getWindow: () => windowManager!.getWindow(),
     app,
   });
+
+  // 12. Window.
+  windowManager.createMainWindow();
 
   log.info('boot complete');
 }

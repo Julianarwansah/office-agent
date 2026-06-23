@@ -1,3 +1,5 @@
+import type { SkillParameter } from './skills-schema';
+
 export type LLMChatRole = 'system' | 'user' | 'assistant' | 'tool';
 
 export interface LLMMessage {
@@ -125,7 +127,7 @@ export interface Skill {
   displayName: string;
   description: string;
   category?: string;
-  parameters?: SkillParameterValue;
+  parameters?: SkillParameter[];
   requiresApproval?: boolean;
   dangerous?: boolean;
 }

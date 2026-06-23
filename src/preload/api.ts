@@ -32,6 +32,7 @@ import type {
   Team,
   Workspace,
   WorkspaceFile,
+  Skill,
 } from '../shared/types';
 import type { PresetProviderTemplate, SkillManifest } from '../shared';
 
@@ -170,6 +171,10 @@ export interface SystemInfo {
   hostname: string;
 }
 
+export interface LLMPresetsPayload {
+  presets: PresetProviderTemplate[];
+}
+
 /* -------------------------------------------------------------------------- */
 /*  OfficeAPI — the public surface                                            */
 /* -------------------------------------------------------------------------- */
@@ -199,8 +204,8 @@ export interface OfficeAPI {
     listModels(
       args: string | { providerId?: string; baseUrl?: string; apiKey?: string },
     ): Promise<ApiResponse<string[]>>;
-    /** Provider presets + a suggestion helper. Returns the presets array. */
-    presets(): Promise<ApiResponse<PresetProviderTemplate[]>>;
+    /** Provider presets. */
+    presets(): Promise<ApiResponse<LLMPresetsPayload>>;
   };
 
   /* ----------------------------- Agents --------------------------- */
@@ -295,8 +300,8 @@ export interface OfficeAPI {
 
   /* ----------------------------- Skills --------------------------- */
   skills: {
-    list(): Promise<ApiResponse<SkillManifest[]>>;
-    get(name: string): Promise<ApiResponse<SkillManifest | null>>;
+    list(): Promise<ApiResponse<Skill[]>>;
+    get(name: string): Promise<ApiResponse<Skill | null>>;
     /**
      * The renderer store passes a full `Agent`:
      *   api.skills.getTools(agent)

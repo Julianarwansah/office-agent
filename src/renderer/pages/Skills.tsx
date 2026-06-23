@@ -221,7 +221,7 @@ const SkillsPage: React.FC = () => {
 };
 
 const SkillCard: React.FC<{ skill: Skill }> = ({ skill }) => {
-  const params = skill.parameters ? Object.keys(skill.parameters) : [];
+  const params = skill.parameters ?? [];
   return (
     <div className="card flex flex-col gap-3 p-4">
       <div className="flex items-start justify-between gap-2">
@@ -259,10 +259,11 @@ const SkillCard: React.FC<{ skill: Skill }> = ({ skill }) => {
           <div className="flex flex-wrap gap-1">
             {params.map((p) => (
               <span
-                key={p}
+                key={p.name}
                 className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] text-slate-700 dark:bg-slate-700 dark:text-slate-200"
               >
-                {p}
+                {p.name}
+                {p.required ? '*' : ''}
               </span>
             ))}
           </div>

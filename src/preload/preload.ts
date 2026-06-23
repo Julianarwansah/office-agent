@@ -27,9 +27,11 @@ import type {
   KanbanColumn,
   KanbanTask,
   KanbanTaskEvent,
+  LLMTool,
   LLMProvider,
   Memory,
   Message,
+  Skill,
   Team,
   Workspace,
   WorkspaceFile,
@@ -42,11 +44,13 @@ import type {
   OrchestratorEventMap,
   OrchestratorEventType,
   OrchestratorRendererEvent,
+  LLMPresetsPayload,
   TerminalCreateArgs,
   TerminalDataEvent,
   TerminalExitEvent,
   Unsubscribe,
 } from './api';
+import type { SkillManifest } from '../shared/skills-schema';
 
 /* -------------------------------------------------------------------------- */
 /*  Local helpers                                                             */
@@ -131,7 +135,7 @@ const officeAPI: OfficeAPI = {
       return invoke<string[]>(IPC_CHANNELS.LLM.LIST_MODELS, payload);
     },
     presets() {
-      return invoke<unknown[]>(IPC_CHANNELS.LLM.PRESETS) as Promise<ApiResponse<never[]>>;
+      return invoke<LLMPresetsPayload>(IPC_CHANNELS.LLM.PRESETS);
     },
   },
 
@@ -220,19 +224,19 @@ const officeAPI: OfficeAPI = {
   /* ----------------------------- Messages ------------------------- */
   messages: {
     list(args) {
-      return invoke<unknown[]>(IPC_CHANNELS.MESSAGE.LIST, args) as Promise<ApiResponse<never[]>>;
+      return invoke<Message[]>(IPC_CHANNELS.MESSAGE.LIST, args);
     },
     get(id) {
-      return invoke<unknown>(IPC_CHANNELS.MESSAGE.GET, id) as Promise<ApiResponse<never>>;
+      return invoke<Message | null>(IPC_CHANNELS.MESSAGE.GET, id);
     },
     create(input) {
-      return invoke<unknown>(IPC_CHANNELS.MESSAGE.CREATE, input) as Promise<ApiResponse<never>>;
+      return invoke<Message>(IPC_CHANNELS.MESSAGE.CREATE, input);
     },
     delete(id) {
       return invoke<boolean>(IPC_CHANNELS.MESSAGE.DELETE, id);
     },
     search(args) {
-      return invoke<unknown[]>(IPC_CHANNELS.MESSAGE.SEARCH, args) as Promise<ApiResponse<never[]>>;
+      return invoke<Message[]>(IPC_CHANNELS.MESSAGE.SEARCH, args);
     },
   },
 
@@ -252,16 +256,16 @@ const officeAPI: OfficeAPI = {
   /* ----------------------------- Memories ------------------------- */
   memories: {
     list(args) {
-      return invoke<unknown[]>(IPC_CHANNELS.MEMORY.LIST, args) as Promise<ApiResponse<never[]>>;
+      return invoke<Memory[]>(IPC_CHANNELS.MEMORY.LIST, args);
     },
     get(id) {
-      return invoke<unknown>(IPC_CHANNELS.MEMORY.GET, id) as Promise<ApiResponse<never>>;
+      return invoke<Memory | null>(IPC_CHANNELS.MEMORY.GET, id);
     },
     create(input) {
-      return invoke<unknown>(IPC_CHANNELS.MEMORY.CREATE, input) as Promise<ApiResponse<never>>;
+      return invoke<Memory>(IPC_CHANNELS.MEMORY.CREATE, input);
     },
     update(id, partial) {
-      return invoke<unknown>(IPC_CHANNELS.MEMORY.UPDATE, id, partial) as Promise<ApiResponse<never>>;
+      return invoke<Memory | null>(IPC_CHANNELS.MEMORY.UPDATE, id, partial);
     },
     delete(id) {
       return invoke<boolean>(IPC_CHANNELS.MEMORY.DELETE, id);
@@ -270,40 +274,40 @@ const officeAPI: OfficeAPI = {
       return invoke<number>(IPC_CHANNELS.MEMORY.DELETE_ALL, args);
     },
     pin(id) {
-      return invoke<unknown>(IPC_CHANNELS.MEMORY.PIN, id) as Promise<ApiResponse<never>>;
+      return invoke<Memory | null>(IPC_CHANNELS.MEMORY.PIN, id);
     },
     unpin(id) {
-      return invoke<unknown>(IPC_CHANNELS.MEMORY.UNPIN, id) as Promise<ApiResponse<never>>;
+      return invoke<Memory | null>(IPC_CHANNELS.MEMORY.UNPIN, id);
     },
     search(args) {
-      return invoke<unknown[]>(IPC_CHANNELS.MEMORY.SEARCH, args) as Promise<ApiResponse<never[]>>;
+      return invoke<Memory[]>(IPC_CHANNELS.MEMORY.SEARCH, args);
     },
     consolidate(args) {
-      return invoke<unknown>(IPC_CHANNELS.MEMORY.CONSOLIDATE, args) as Promise<ApiResponse<never>>;
+      return invoke<import('../shared/types').ConversationSummary | null>(IPC_CHANNELS.MEMORY.CONSOLIDATE, args);
     },
     extract(args) {
-      return invoke<unknown[]>(IPC_CHANNELS.MEMORY.EXTRACT, args) as Promise<ApiResponse<never[]>>;
+      return invoke<Memory[]>(IPC_CHANNELS.MEMORY.EXTRACT, args);
     },
   },
 
   /* ----------------------------- Skills --------------------------- */
   skills: {
     list() {
-      return invoke<unknown[]>(IPC_CHANNELS.SKILL.LIST) as Promise<ApiResponse<never[]>>;
+      return invoke<Skill[]>(IPC_CHANNELS.SKILL.LIST);
     },
     get(name) {
-      return invoke<unknown>(IPC_CHANNELS.SKILL.GET, name) as Promise<ApiResponse<never>>;
+      return invoke<Skill | null>(IPC_CHANNELS.SKILL.GET, name);
     },
     getTools(args) {
-      return invoke<unknown[]>(IPC_CHANNELS.SKILL.GET_TOOLS, {
+      return invoke<LLMTool[]>(IPC_CHANNELS.SKILL.GET_TOOLS, {
         agentId: getAgentId(args),
-      }) as Promise<ApiResponse<never[]>>;
+      });
     },
     create(input) {
-      return invoke<unknown>(IPC_CHANNELS.SKILL.CREATE, input) as Promise<ApiResponse<never>>;
+      return invoke<SkillManifest>(IPC_CHANNELS.SKILL.CREATE, input);
     },
     update(name, partial) {
-      return invoke<unknown>(IPC_CHANNELS.SKILL.UPDATE, name, partial) as Promise<ApiResponse<never>>;
+      return invoke<SkillManifest | null>(IPC_CHANNELS.SKILL.UPDATE, name, partial);
     },
     delete(name) {
       return invoke<boolean>(IPC_CHANNELS.SKILL.DELETE, name);
@@ -317,10 +321,15 @@ const officeAPI: OfficeAPI = {
       }>(IPC_CHANNELS.SKILL.TEST, args);
     },
     listUser() {
-      return invoke<unknown[]>(IPC_CHANNELS.SKILL.LIST_USER) as Promise<ApiResponse<never[]>>;
+      return invoke<Awaited<ReturnType<OfficeAPI['skills']['listUser']>> extends ApiResponse<infer T> ? T : never>(
+        IPC_CHANNELS.SKILL.LIST_USER,
+      );
     },
     getUser(name) {
-      return invoke<unknown>(IPC_CHANNELS.SKILL.GET_USER, name) as Promise<ApiResponse<never>>;
+      return invoke<Awaited<ReturnType<OfficeAPI['skills']['getUser']>> extends ApiResponse<infer T> ? T : never>(
+        IPC_CHANNELS.SKILL.GET_USER,
+        name,
+      );
     },
   },
 
@@ -343,16 +352,16 @@ const officeAPI: OfficeAPI = {
   /* ----------------------------- Workspace ------------------------ */
   workspace: {
     list() {
-      return invoke<unknown[]>(IPC_CHANNELS.WORKSPACE.LIST) as Promise<ApiResponse<never[]>>;
+      return invoke<Workspace[]>(IPC_CHANNELS.WORKSPACE.LIST);
     },
     getDefault() {
-      return invoke<unknown>(IPC_CHANNELS.WORKSPACE.GET_DEFAULT) as Promise<ApiResponse<never>>;
+      return invoke<Workspace | null>(IPC_CHANNELS.WORKSPACE.GET_DEFAULT);
     },
     create(input) {
-      return invoke<unknown>(IPC_CHANNELS.WORKSPACE.CREATE, input) as Promise<ApiResponse<never>>;
+      return invoke<Workspace>(IPC_CHANNELS.WORKSPACE.CREATE, input);
     },
     update(id, partial) {
-      return invoke<unknown>(IPC_CHANNELS.WORKSPACE.UPDATE, id, partial) as Promise<ApiResponse<never>>;
+      return invoke<Workspace | null>(IPC_CHANNELS.WORKSPACE.UPDATE, id, partial);
     },
     delete(id) {
       return invoke<boolean>(IPC_CHANNELS.WORKSPACE.DELETE, id);
@@ -361,7 +370,7 @@ const officeAPI: OfficeAPI = {
       return invoke<boolean>(IPC_CHANNELS.WORKSPACE.SET_DEFAULT, id);
     },
     listFiles(workspaceId) {
-      return invoke<unknown[]>(IPC_CHANNELS.WORKSPACE.LIST_FILES, workspaceId) as Promise<ApiResponse<never[]>>;
+      return invoke<WorkspaceFile[]>(IPC_CHANNELS.WORKSPACE.LIST_FILES, workspaceId);
     },
     readFile(a) {
       const payload = typeof a === 'string' ? { path: a } : a;
@@ -379,13 +388,13 @@ const officeAPI: OfficeAPI = {
       return invoke<Record<string, unknown>>(IPC_CHANNELS.SETTINGS.GET_ALL);
     },
     getApp() {
-      return invoke<unknown>(IPC_CHANNELS.SETTINGS.GET_APP) as Promise<ApiResponse<never>>;
+      return invoke<AppSettings>(IPC_CHANNELS.SETTINGS.GET_APP);
     },
     saveApp(partial) {
-      return invoke<unknown>(IPC_CHANNELS.SETTINGS.SAVE_APP, partial) as Promise<ApiResponse<never>>;
+      return invoke<AppSettings>(IPC_CHANNELS.SETTINGS.SAVE_APP, partial);
     },
     get(key) {
-      return invoke<unknown>(IPC_CHANNELS.SETTINGS.GET, key) as Promise<ApiResponse<unknown>>;
+      return invoke<unknown>(IPC_CHANNELS.SETTINGS.GET, key);
     },
     set(args) {
       return invoke<void>(IPC_CHANNELS.SETTINGS.SET, args);
@@ -398,7 +407,7 @@ const officeAPI: OfficeAPI = {
   /* ----------------------------- System --------------------------- */
   system: {
     getInfo() {
-      return invoke<unknown>(IPC_CHANNELS.SYSTEM.GET_INFO) as Promise<ApiResponse<never>>;
+      return invoke<import('./api').SystemInfo>(IPC_CHANNELS.SYSTEM.GET_INFO);
     },
     openExternal(args) {
       return invoke<void>(IPC_CHANNELS.SYSTEM.OPEN_EXTERNAL, args);

@@ -226,7 +226,7 @@ const LLMTab: React.FC = () => {
               )}
               {batchTesting && (
                 <span className="text-slate-500">
-                  Testing {batchProgress.done + 1}/{batchProgress.total}â€¦
+                  Testing {batchProgress.done + 1}/{batchProgress.total}...
                 </span>
               )}
             </p>
@@ -262,7 +262,7 @@ const LLMTab: React.FC = () => {
       {loading && (
         <div className="card p-8 text-center">
           <Loader2 className="mx-auto mb-2 animate-spin text-slate-400" size={20} />
-          <p className="text-sm text-slate-500">Loading providersâ€¦</p>
+          <p className="text-sm text-slate-500">Loading providers...</p>
         </div>
       )}
 
@@ -275,7 +275,7 @@ const LLMTab: React.FC = () => {
             </div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No LLM providers yet</h3>
             <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
-              Connect an OpenAI-compatible endpoint (OpenAI, Ollama, LM Studio, OpenRouter, Groq, Togetherâ€¦) to start chatting with your agents.
+              Connect an OpenAI-compatible endpoint (OpenAI, Ollama, LM Studio, OpenRouter, Groq, Together...) to start chatting with your agents.
             </p>
             <button
               className="btn-primary mt-5"
@@ -481,7 +481,7 @@ const WorkspaceTab: React.FC = () => {
       <p className="mb-4 text-sm text-slate-500">
         Manage your project workspaces. Files inside a workspace can be browsed and read by agents.
       </p>
-      {loading && <p className="text-sm text-slate-500">Loadingâ€¦</p>}
+      {loading && <p className="text-sm text-slate-500">Loading...</p>}
       {!loading && workspaces.length === 0 && (
         <p className="text-sm text-slate-500">No workspaces configured. Visit the Workspace page to add one.</p>
       )}
@@ -539,7 +539,7 @@ const AdvancedTab: React.FC = () => {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">Importance threshold (0â€“1)</label>
+            <label className="mb-1 block text-sm font-medium">Importance threshold (0-1)</label>
             <input
               type="number"
               step="0.05"

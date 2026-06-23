@@ -223,7 +223,7 @@ export function registerSkillHandlers(deps: SkillHandlerDeps): void {
       implementation: string;
       enabled: boolean;
     }>,
-  ): Promise<ApiResponse<Skill>> => {
+  ): Promise<ApiResponse<SkillManifest>> => {
     try {
       if (!input || typeof input !== 'object') return fail('input is required');
       const nameCheck = validateName(input.name);
@@ -264,7 +264,7 @@ export function registerSkillHandlers(deps: SkillHandlerDeps): void {
       } catch (e) {
         log.warn(`created user skill "${created.name}" but failed to register`, e);
       }
-      return ok(manifestToSkill(userSkillRepo.toManifest(created)));
+      return ok(userSkillRepo.toManifest(created));
     } catch (err) {
       return failErr('SKILL.CREATE', err);
     }
@@ -285,7 +285,7 @@ export function registerSkillHandlers(deps: SkillHandlerDeps): void {
       implementation: string;
       enabled: boolean;
     }>,
-  ): Promise<ApiResponse<Skill | null>> => {
+  ): Promise<ApiResponse<SkillManifest | null>> => {
     try {
       const nameCheck = validateName(name);
       if (!nameCheck.ok) return fail(nameCheck.error);
@@ -344,7 +344,7 @@ export function registerSkillHandlers(deps: SkillHandlerDeps): void {
       } catch (e) {
         log.warn(`updated user skill "${updated.name}" but failed to re-register`, e);
       }
-      return ok(manifestToSkill(userSkillRepo.toManifest(updated)));
+      return ok(userSkillRepo.toManifest(updated));
     } catch (err) {
       return failErr('SKILL.UPDATE', err);
     }
@@ -442,7 +442,7 @@ function manifestToSkill(m: SkillManifest): Skill {
     displayName: m.displayName ?? m.name,
     description: m.description ?? '',
     category: m.category,
-    parameters: m.parameters as unknown as Skill['parameters'],
+    parameters: m.parameters,
     requiresApproval: m.requiresApproval,
     dangerous: m.dangerous,
   };

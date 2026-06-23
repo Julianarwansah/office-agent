@@ -65,8 +65,15 @@ export const useLLMStore = create<LLMState>((set, get) => ({
 
   loadPresets: async () => {
     try {
-      const presets = unwrap(await api.llm.presets()) as unknown as { presets: Array<{ id?: string; name: string; baseUrl: string; model?: string; defaultModel?: string }> };
-      set({ presets: (presets.presets ?? []).map((p) => ({ id: p.id ?? p.name, name: p.name, baseUrl: p.baseUrl, model: p.defaultModel ?? p.model ?? '' })) });
+      const payload = unwrap(await api.llm.presets());
+      set({
+        presets: (payload.presets ?? []).map((p) => ({
+          id: p.name,
+          name: p.name,
+          baseUrl: p.baseUrl,
+          model: p.defaultModel,
+        })),
+      });
     } catch (err) {
       console.error('Failed to load LLM presets:', err);
     }
