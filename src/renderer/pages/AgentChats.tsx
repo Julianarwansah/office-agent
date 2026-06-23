@@ -381,15 +381,17 @@ const AgentChatsPage: React.FC = () => {
                     </div>
                   )}
 
-                {activeMessages.map((m) => (
-                  <MessageBubble
-                    key={m.id}
-                    message={m}
-                    agentName={activeAgent.name}
-                    agentColor={activeAgent.color}
-                    agentAvatar={activeAgent.avatar}
-                  />
-                ))}
+                {activeMessages
+                  .filter((m) => m.senderType === 'user' || !!(m.content?.trim()) || !!(m.toolCalls?.length))
+                  .map((m) => (
+                    <MessageBubble
+                      key={m.id}
+                      message={m}
+                      agentName={activeAgent.name}
+                      agentColor={activeAgent.color}
+                      agentAvatar={activeAgent.avatar}
+                    />
+                  ))}
 
                 {activeStreaming.map((s) => (
                   <MessageBubble

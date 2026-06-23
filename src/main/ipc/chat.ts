@@ -133,7 +133,11 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
             parentMessageId: args.parentMessageId ?? userMsg.id,
             signal: controller.signal,
           })
-          .catch((err) => log.error('streamChat failed', err))
+          .catch((err) => {
+            if ((err as { name?: string })?.name === 'AbortError') return;
+            const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+            log.error('streamChat failed', msg);
+          })
           .finally(() => clearActiveRun(chatRoomId, controller));
       } else {
         void runTeamChatAsync(orchestrator, messages, windowManager, {

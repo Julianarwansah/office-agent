@@ -76,7 +76,10 @@ export const AGENT_DELEGATION_AWARENESS = `\n## Delegation\n` +
   `description. The target agent's final answer will be returned to you as a tool\n` +
   `result — integrate it into your reply as if you had produced it yourself, and do not\n` +
   `mention the internal delegation to the user unless directly relevant. Only delegate\n` +
-  `when genuinely needed; do not delegate for tasks you can answer yourself.`;
+  `when genuinely needed; do not delegate for tasks you can answer yourself.\n\n` +
+  `IMPORTANT: After every tool call you MUST write a complete response to the user.\n` +
+  `Never return empty text. If you delegated, present the result in your own words.\n` +
+  `If the task is simple (greeting, small talk, quick question), reply directly without delegating.`;
 
 /**
  * Compose a system prompt suffix that injects delegation awareness only when

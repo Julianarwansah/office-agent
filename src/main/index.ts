@@ -128,10 +128,15 @@ async function boot(): Promise<void> {
   providerManager = new ProviderManager({
     resolve: async (id: string) => {
       const found = repos!.llmProviders.findById(id);
-      if (!found) {
-        throw new Error(`LLM provider not found: ${id}`);
+      if (found) return found;
+      // Fall back to the default provider so agents with a stale providerId
+      // (e.g., after a provider was deleted and re-created) can still respond.
+      const defaultProvider = repos!.llmProviders.getDefault();
+      if (defaultProvider) {
+        log.warn(`LLM provider '${id}' not found — falling back to default '${defaultProvider.name}'`);
+        return defaultProvider;
       }
-      return found;
+      throw new Error(`LLM provider not found: ${id} (and no default provider exists)`);
     },
     decrypt: (ciphertext: string) => {
       // Repository `findById` already returns the decrypted key; the

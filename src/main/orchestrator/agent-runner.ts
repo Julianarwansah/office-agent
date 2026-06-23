@@ -90,7 +90,16 @@ export class AgentRunner {
     }
 
     // 2. Build the system prompt.
-    const tools = this.deps.skillRegistry.getToolsForAgent(agent);
+    const allTools = this.deps.skillRegistry.getToolsForAgent(agent);
+
+    // Only provide tools when the message actually requires them.
+    // Detect tool-relevant intent via keywords; fall back to word count for longer messages.
+    // This prevents greetings / casual questions from triggering tool calls.
+    const TOOL_TRIGGERS = /\b(search|find|fetch|run|execute|calculate|compute|analyze|deploy|build|compile|open|read|write|delete|create|list|download|upload|scan|ping|check|delegate|assign|move|kanban|board|task|time|date|today|now|what time|calendar)\b/i;
+    const wordCount = userMessage.trim().split(/\s+/).length;
+    const likelyNeedsTools = wordCount > 6 || TOOL_TRIGGERS.test(userMessage);
+    const tools = likelyNeedsTools ? allTools : [];
+
     const hasDelegate = tools.some((t) => t.function.name === 'agent_delegate');
     const systemPrompt =
       PromptBuilder.buildSystemPrompt({
@@ -98,6 +107,7 @@ export class AgentRunner {
         memories: memoriesUsed,
         teamInstructions: team?.instructions,
         systemPromptPrefix: delegationSuffix(hasDelegate) || undefined,
+        hasTools: tools.length > 0,
       }) + (memoryContext.summary ? `\n\n## Conversation Summary\n${memoryContext.summary.summary}` : '');
 
     // 3. Recent history (excluding the current user message, which we'll add

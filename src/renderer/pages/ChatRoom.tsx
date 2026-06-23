@@ -274,7 +274,9 @@ const ChatRoomPage: React.FC = () => {
                   </div>
                 )}
 
-                {activeMessages.map((m) => {
+                {activeMessages
+                  .filter((m) => m.senderType === 'user' || !!(m.content?.trim()) || !!(m.toolCalls?.length))
+                  .map((m) => {
                   const agent = agentsById.get(m.senderId);
                   return (
                     <MessageBubble

@@ -122,10 +122,11 @@ export interface BuildSystemPromptOptions {
   teamInstructions?: string;
   systemPromptPrefix?: string;
   now?: Date;
+  hasTools?: boolean;
 }
 
 export function buildSystemPrompt(opts: BuildSystemPromptOptions): string {
-  const { agent, memories, teamInstructions, systemPromptPrefix, now } = opts;
+  const { agent, memories, teamInstructions, systemPromptPrefix, now, hasTools } = opts;
   const sections: string[] = [];
 
   if (systemPromptPrefix && systemPromptPrefix.trim().length > 0) {
@@ -156,6 +157,15 @@ export function buildSystemPrompt(opts: BuildSystemPromptOptions): string {
       (m, i) => `${i + 1}. [${m.category}] ${m.content}`,
     );
     sections.push(`## Memory\n${lines.join('\n')}`);
+  }
+
+  if (hasTools) {
+    sections.push(
+      `## Tool Usage\n` +
+      `Only call tools when the user's request genuinely requires it (running code, fetching URLs, executing commands, performing calculations, etc.).\n` +
+      `For greetings, casual conversation, simple questions, or anything you can answer from knowledge — respond directly WITHOUT calling any tool.\n` +
+      `Never call a tool just because it is available. Prefer a direct answer whenever possible.`,
+    );
   }
 
   const date = now ?? new Date();
