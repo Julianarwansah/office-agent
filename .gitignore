@@ -4,6 +4,7 @@ dist-main/
 dist-renderer/
 release/
 *.log
+*.err
 *.tsbuildinfo
 .env
 .env.local

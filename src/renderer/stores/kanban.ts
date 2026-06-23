@@ -151,11 +151,15 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
   deleteColumn: async (id) => {
     unwrap(await api.kanban.deleteColumn(id));
     set((s) => {
-      const next: Record<string, KanbanColumn[]> = {};
+      const nextColumns: Record<string, KanbanColumn[]> = {};
+      const nextTasks: Record<string, KanbanTask[]> = {};
       for (const [boardId, cols] of Object.entries(s.columnsByBoard)) {
-        next[boardId] = cols.filter((c) => c.id !== id);
+        nextColumns[boardId] = cols.filter((c) => c.id !== id);
       }
-      return { columnsByBoard: next };
+      for (const [boardId, tasks] of Object.entries(s.tasksByBoard)) {
+        nextTasks[boardId] = tasks.filter((t) => t.columnId !== id);
+      }
+      return { columnsByBoard: nextColumns, tasksByBoard: nextTasks };
     });
   },
 

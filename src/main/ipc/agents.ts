@@ -4,7 +4,7 @@
 
 import { ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../../shared/types';
-import type { Agent, AgentSkill, ApiResponse, Team } from '../../shared/types';
+import type { Agent, AgentRole, AgentSkill, ApiResponse, Team } from '../../shared/types';
 import type { AgentRepository, TeamRepository } from '../db/repositories';
 import { createLogger } from '../utils/logger';
 
@@ -12,6 +12,7 @@ const log = createLogger('ipc:agents');
 
 function ok<T>(data: T): ApiResponse<T> { return { success: true, data }; }
 function fail<T = never>(error: string): ApiResponse<T> { return { success: false, error }; }
+const AGENT_ROLES: AgentRole[] = ['lead', 'member', 'observer'];
 
 export interface AgentHandlerDeps {
   agents: AgentRepository;
@@ -137,7 +138,11 @@ function sanitizeAgentInput(input: Partial<Agent> | undefined): Partial<Agent> {
   if (input.systemPrompt !== undefined) out.systemPrompt = String(input.systemPrompt ?? '');
   if (input.providerId !== undefined) out.providerId = String(input.providerId);
   if (input.teamId !== undefined) out.teamId = input.teamId ?? undefined;
-  if (input.role !== undefined) out.role = input.role;
+  if (input.role !== undefined) {
+    out.role = AGENT_ROLES.includes(input.role as AgentRole)
+      ? (input.role as AgentRole)
+      : 'member';
+  }
   if (input.color !== undefined) out.color = input.color ?? undefined;
   if (input.isLead !== undefined) out.isLead = Boolean(input.isLead);
   if (input.temperature !== undefined) out.temperature = numOrU(input.temperature);

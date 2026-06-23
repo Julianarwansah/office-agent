@@ -95,7 +95,7 @@ export const useAgentsStore = create<AgentsState>((set, get) => ({
 
   deleteTeam: async (id) => {
     unwrap(await api.teams.delete(id));
-    await get().loadTeams();
+    await Promise.all([get().loadTeams(), get().loadAgents()]);
   },
 
   addAgentToTeam: async (teamId, agentId) => {

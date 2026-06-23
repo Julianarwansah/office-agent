@@ -26,6 +26,7 @@ const WorkspacePage: React.FC = () => {
   const loadWorkspaces = useWorkspaceStore((s) => s.loadWorkspaces);
   const setCurrentWorkspace = useWorkspaceStore((s) => s.setCurrentWorkspace);
   const loadFiles = useWorkspaceStore((s) => s.loadFiles);
+  const createWorkspace = useWorkspaceStore((s) => s.createWorkspace);
   const readFile = useWorkspaceStore((s) => s.readFile);
   const openInOS = useWorkspaceStore((s) => s.openInOS);
 
@@ -104,17 +105,7 @@ const WorkspacePage: React.FC = () => {
     setBusy(true);
     setFormError(null);
     try {
-      const api = (window as { officeAPI: { workspace: { create: (input: Record<string, unknown>) => Promise<{ success: boolean; data?: { id: string }; error?: string }> } } }).officeAPI;
-      const res = await api.workspace.create({ name: newName.trim(), path: newPath.trim() });
-      if (!res.success) {
-        setFormError(res.error ?? 'Gagal membuat workspace');
-        return;
-      }
-      if (res.data?.id) {
-        await setCurrentWorkspace(res.data.id);
-      } else {
-        await loadWorkspaces();
-      }
+      await createWorkspace({ name: newName.trim(), path: newPath.trim() });
       closeCreate();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Gagal membuat workspace');

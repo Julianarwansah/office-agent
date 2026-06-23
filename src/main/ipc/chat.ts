@@ -44,7 +44,7 @@ interface ActiveRun {
 let activeRun: ActiveRun | null = null;
 
 export function registerChatHandlers(deps: ChatHandlerDeps): void {
-  const { orchestrator, messages, chatrooms, window: windowManager } = deps;
+  const { orchestrator, messages, chatrooms, agents, window: windowManager } = deps;
 
   ipcMain.handle(IPC_CHANNELS.CHAT.SEND, async (
     _evt,
@@ -104,11 +104,18 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
       //   - run the explicitly-mentioned agent, or
       //   - pick the lead agent for the room, or
       //   - pick the first agent in the room.
-      const agentId = args.agentId
-        || room.agentIds[0]
-        || null;
+      const mentionedAgentId = args.mentionedAgentIds
+        ?.map((id) => String(id))
+        .find((id) => room.agentIds.includes(id));
+      const requestedAgentId = args.agentId ? String(args.agentId) : undefined;
+      const agentId = requestedAgentId && room.agentIds.includes(requestedAgentId)
+        ? requestedAgentId
+        : mentionedAgentId || room.agentIds[0] || null;
       if (!agentId) {
         return fail('No agents in chatroom to stream from');
+      }
+      if (!agents.findById(agentId)) {
+        return fail(`Agent not found: ${agentId}`);
       }
 
       const controller = new AbortController();

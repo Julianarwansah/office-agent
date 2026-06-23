@@ -14,6 +14,7 @@ interface WorkspaceState {
   loadWorkspaces: () => Promise<void>;
   setCurrentWorkspace: (id: string | null) => Promise<void>;
   loadFiles: (workspaceId?: string) => Promise<void>;
+  createWorkspace: (input: { name: string; path: string; isDefault?: boolean }) => Promise<Workspace>;
   readFile: (path: string) => Promise<string>;
   openInOS: (path: string) => Promise<void>;
 }
@@ -73,6 +74,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         error: err instanceof Error ? err.message : 'Failed to load files',
       });
     }
+  },
+
+  createWorkspace: async (input) => {
+    const created = unwrap(await api.workspace.create(input));
+    await get().loadWorkspaces();
+    await get().setCurrentWorkspace(created.id);
+    return created;
   },
 
   readFile: async (path) => {

@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, Loader2, Plus, RefreshCw, Sparkles, Brain } from 'lucide-react';
 import { useAgentsStore } from '../stores/agents';
 import { useMemoriesStore } from '../stores/memories';
+import { useChatRoomsStore } from '../stores/chatrooms';
 import Button from '../components/ui/Button';
 import Input, { Textarea, Select } from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
@@ -28,6 +30,7 @@ const TYPE_OPTIONS: { value: MemoryType; label: string }[] = [
 
 const MemoriesPage: React.FC = () => {
   const agents = useAgentsStore((s) => s.agents);
+  const [searchParams] = useSearchParams();
   const loadAgents = useAgentsStore((s) => s.loadAgents);
   const loadTeams = useAgentsStore((s) => s.loadTeams);
   const teams = useAgentsStore((s) => s.teams);
@@ -46,6 +49,8 @@ const MemoriesPage: React.FC = () => {
   const unpinMemory = useMemoriesStore((s) => s.unpinMemory);
   const searchMemories = useMemoriesStore((s) => s.searchMemories);
   const consolidateMemories = useMemoriesStore((s) => s.consolidateMemories);
+  const chatrooms = useChatRoomsStore((s) => s.chatrooms);
+  const loadChatrooms = useChatRoomsStore((s) => s.loadChatrooms);
 
   const loadSkills = useSkillsStore((s) => s.loadSkills);
   const setCurrentPage = useAppStore((s) => s.setCurrentPage);
@@ -72,7 +77,15 @@ const MemoriesPage: React.FC = () => {
     void loadAgents();
     void loadTeams();
     void loadSkills();
-  }, [loadAgents, loadTeams, loadSkills]);
+    void loadChatrooms();
+  }, [loadAgents, loadTeams, loadSkills, loadChatrooms]);
+
+  useEffect(() => {
+    const agentId = searchParams.get('agentId');
+    if (agentId && agents.some((a) => a.id === agentId)) {
+      setSelectedAgentId(agentId);
+    }
+  }, [agents, searchParams]);
 
   useEffect(() => {
     if (!selectedAgentId && agents.length > 0) {
@@ -115,12 +128,13 @@ const MemoriesPage: React.FC = () => {
     try {
       const agent = agents.find((a) => a.id === selectedAgentId);
       if (!agent) return;
-      const teamChatroomId = (agent as { teamId?: string }).teamId ?? '';
-      if (!teamChatroomId) {
-        alert('Pilih agent yang punya team / chatroom untuk konsolidasi.');
+      const chatroom = chatrooms.find((c) => c.type === 'direct' && c.agentIds.includes(agent.id))
+        ?? chatrooms.find((c) => c.agentIds.includes(agent.id));
+      if (!chatroom) {
+        alert('Pilih agent yang sudah punya chatroom untuk konsolidasi.');
         return;
       }
-      await consolidateMemories(selectedAgentId, teamChatroomId);
+      await consolidateMemories(selectedAgentId, chatroom.id);
     } catch (err) {
       console.error(err);
     }

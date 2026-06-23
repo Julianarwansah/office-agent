@@ -133,7 +133,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
     const { chatRoomId, userMessage, mentionedAgentIds, agentId } = params;
     set({ sendError: null });
     try {
-      unwrap(
+      const result = unwrap(
         await api.chat.stream({
           chatRoomId,
           userMessage,
@@ -143,7 +143,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
       );
 
       const userMsg: Message = {
-        id: `user-${Date.now()}`,
+        id: result.messageId,
         chatRoomId,
         senderType: 'user',
         senderId: 'user',
