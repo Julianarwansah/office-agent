@@ -12,7 +12,7 @@ import {
 import { useAgentsStore } from '../stores/agents';
 import { useChatRoomsStore } from '../stores/chatrooms';
 import MessageBubble from '../components/MessageBubble';
-import InputArea from '../components/InputArea';
+import InputArea, { type InputAreaHandle } from '../components/InputArea';
 import { cn, getInitial } from '../lib/utils';
 
 const AgentChatsPage: React.FC = () => {
@@ -39,6 +39,8 @@ const AgentChatsPage: React.FC = () => {
   const sendMessage = useChatRoomsStore((s) => s.sendMessage);
   const clearMessages = useChatRoomsStore((s) => s.clearMessages);
   const cancelStream = useChatRoomsStore((s) => s.cancelStream);
+
+  const inputAreaRef = useRef<InputAreaHandle>(null);
 
   const [query, setQuery] = useState('');
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
@@ -333,8 +335,10 @@ const AgentChatsPage: React.FC = () => {
                 onClick={async () => {
                   if (!chatRoomId) return;
                   if (!window.confirm(`Hapus semua history chat dengan ${activeAgent.name}?`)) return;
+                  await cancelStream(chatRoomId);
                   await clearMessages(chatRoomId);
                   loadedRef.current.delete(chatRoomId);
+                  inputAreaRef.current?.focus();
                 }}
                 className="rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                 title="Hapus history chat"
@@ -417,6 +421,7 @@ const AgentChatsPage: React.FC = () => {
             </div>
 
             <InputArea
+              ref={inputAreaRef}
               onSend={handleSend}
               onCancel={() => void cancelStream(chatRoomId ?? undefined)}
               isStreaming={isStreaming}

@@ -281,7 +281,7 @@ export interface OfficeAPI {
   chat: {
     send(args: ChatSendArgs): Promise<ApiResponse<Message>>;
     stream(args: ChatSendArgs): Promise<ApiResponse<Message>>;
-    cancel(): Promise<ApiResponse<void>>;
+    cancel(chatRoomId?: string): Promise<ApiResponse<void>>;
   };
 
   /* ----------------------------- Memories ------------------------- */

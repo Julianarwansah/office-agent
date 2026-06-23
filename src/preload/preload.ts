@@ -251,8 +251,8 @@ const officeAPI: OfficeAPI = {
     stream(args: ChatSendArgs) {
       return invoke<Message>(IPC_CHANNELS.CHAT.STREAM, args);
     },
-    cancel() {
-      return invoke<void>(IPC_CHANNELS.CHAT.CANCEL);
+    cancel(chatRoomId?: string) {
+      return invoke<void>(IPC_CHANNELS.CHAT.CANCEL, chatRoomId);
     },
   },
 

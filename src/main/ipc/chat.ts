@@ -35,17 +35,11 @@ export interface ChatHandlerDeps {
   window: WindowManager;
 }
 
-interface ActiveRun {
-  controller: AbortController;
-  chatRoomId: string;
-  startedAt: number;
-}
-
-let activeRun: ActiveRun | null = null;
+const activeRuns = new Map<string, AbortController>();
 
 function clearActiveRun(chatRoomId: string, controller: AbortController): void {
-  if (activeRun && activeRun.chatRoomId === chatRoomId && activeRun.controller === controller) {
-    activeRun = null;
+  if (activeRuns.get(chatRoomId) === controller) {
+    activeRuns.delete(chatRoomId);
   }
 }
 
@@ -68,11 +62,11 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
 
       const userMsg = insertUserMessage(messages, chatRoomId, userMessage, args.parentMessageId);
       const controller = new AbortController();
-      const previous = activeRun;
-      activeRun = { controller, chatRoomId, startedAt: Date.now() };
+      const previous = activeRuns.get(chatRoomId);
+      activeRuns.set(chatRoomId, controller);
       if (previous) {
         try {
-          previous.controller.abort();
+          previous.abort();
         } catch (err) {
           log.warn('failed to abort previous run before starting new one', err);
         }
@@ -114,11 +108,11 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
       const userMsg = insertUserMessage(messages, chatRoomId, userMessage, args.parentMessageId);
 
       const controller = new AbortController();
-      const previous = activeRun;
-      activeRun = { controller, chatRoomId, startedAt: Date.now() };
+      const previous = activeRuns.get(chatRoomId);
+      activeRuns.set(chatRoomId, controller);
       if (previous) {
         try {
-          previous.controller.abort();
+          previous.abort();
         } catch (err) {
           log.warn('failed to abort previous run before starting new one', err);
         }
@@ -160,17 +154,23 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
     }
   });
 
-  ipcMain.handle(IPC_CHANNELS.CHAT.CANCEL, async (): Promise<ApiResponse<void>> => {
+  ipcMain.handle(IPC_CHANNELS.CHAT.CANCEL, async (
+    _evt,
+    chatRoomId?: string,
+  ): Promise<ApiResponse<void>> => {
     try {
-      if (!activeRun) {
-        return ok(undefined);
+      if (chatRoomId) {
+        const controller = activeRuns.get(chatRoomId);
+        if (controller) {
+          try { controller.abort(); } catch (err) { log.warn('failed to abort run', err); }
+          activeRuns.delete(chatRoomId);
+        }
+      } else {
+        for (const [, controller] of activeRuns) {
+          try { controller.abort(); } catch { /* ignore */ }
+        }
+        activeRuns.clear();
       }
-      try {
-        activeRun.controller.abort();
-      } catch (err) {
-        log.warn('failed to abort active run', err);
-      }
-      activeRun = null;
       return ok(undefined);
     } catch (err) {
       return failErr('CHAT.CANCEL', err);

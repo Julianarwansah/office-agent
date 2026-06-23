@@ -179,6 +179,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
 
   clearMessages: async (chatRoomId) => {
     unwrap(await api.messages.clear({ chatRoomId }));
+    cleanupSubscriptions(get, set);
     set((s) => ({
       messagesByRoom: { ...s.messagesByRoom, [chatRoomId]: [] },
       streamingMessages: { ...s.streamingMessages, [chatRoomId]: [] },
@@ -188,7 +189,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
   cancelStream: async (chatRoomId?: string) => {
     const roomId = chatRoomId ?? get().currentChatRoomId;
     try {
-      unwrap(await api.chat.cancel());
+      unwrap(await api.chat.cancel(roomId ?? undefined));
     } catch (err) {
       console.error('Failed to cancel stream:', err);
     } finally {
@@ -314,19 +315,36 @@ function subscribeToEvents(
     }
   });
 
-  const offError = api.events.onOrchestrator('agent:error', (payload: OrchestratorEventMap['agent:error']) => {
+  const offError = api.events.onOrchestrator('agent:error', async (payload: OrchestratorEventMap['agent:error']) => {
     const { chatRoomId, messageId, error } = payload;
+    if (!messageId) {
+      set({ sendError: error });
+      return;
+    }
     set((s) => {
-      if (!messageId) return { sendError: error };
       const list = s.streamingMessages[chatRoomId] ?? [];
-      const idx = list.findIndex((m) => m.messageId === messageId);
-      if (idx < 0) return s;
-      const updated = list.slice();
-      updated[idx] = { ...updated[idx], status: 'error', error };
-      return {
-        streamingMessages: { ...s.streamingMessages, [chatRoomId]: updated },
-      };
+      const updated = list.filter((m) => m.messageId !== messageId);
+      return { streamingMessages: { ...s.streamingMessages, [chatRoomId]: updated } };
     });
+    try {
+      const fetched = unwrap(await api.messages.get(messageId));
+      if (!fetched) return;
+      set((s) => {
+        const existing = s.messagesByRoom[chatRoomId] ?? [];
+        const idx = existing.findIndex((m) => m.id === messageId);
+        let nextList: Message[];
+        if (idx >= 0) {
+          nextList = existing.slice();
+          nextList[idx] = fetched;
+        } else {
+          nextList = [...existing, fetched];
+        }
+        nextList.sort((a, b) => a.createdAt - b.createdAt);
+        return { messagesByRoom: { ...s.messagesByRoom, [chatRoomId]: nextList } };
+      });
+    } catch (err) {
+      console.error('Failed to fetch error message:', err);
+    }
   });
 
   const offStart = api.events.onOrchestrator('agent:start', (payload: OrchestratorEventMap['agent:start']) => {

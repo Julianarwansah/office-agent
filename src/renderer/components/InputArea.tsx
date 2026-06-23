@@ -1,7 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Send, Square, AtSign, Users } from 'lucide-react';
 import type { Agent } from '../../shared/types';
 import { cn, getInitial } from '../lib/utils';
+
+export interface InputAreaHandle {
+  focus(): void;
+}
 
 export interface InputAreaProps {
   onSend: (message: string, mentionedAgentIds: string[]) => void;
@@ -20,7 +24,7 @@ interface MentionState {
   startIndex: number;
 }
 
-const InputArea: React.FC<InputAreaProps> = ({
+const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
   onSend,
   onCancel,
   isStreaming,
@@ -29,13 +33,21 @@ const InputArea: React.FC<InputAreaProps> = ({
   disabled = false,
   maxRows = 6,
   initialMentionedAgentIds = [],
-}) => {
+}, ref) => {
   const [value, setValue] = useState('');
   const [mentions, setMentions] = useState<string[]>(initialMentionedAgentIds);
   const [mentionAll, setMentionAll] = useState(false);
   const [mention, setMention] = useState<MentionState>({ active: false, query: '', startIndex: 0 });
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus() {
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus();
+      });
+    },
+  }));
 
   const showAllOption = useMemo(() => {
     if (!mention.active || agents.length < 2) return false;
@@ -282,6 +294,7 @@ const InputArea: React.FC<InputAreaProps> = ({
       </div>
     </div>
   );
-};
+});
+InputArea.displayName = 'InputArea';
 
 export default InputArea;
