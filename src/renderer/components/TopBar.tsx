@@ -17,6 +17,7 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/': { title: 'Dashboard', subtitle: 'Workspace overview' },
   '/agent-chat': { title: 'Chat Agent', subtitle: 'Private 1:1 conversations' },
   '/agents': { title: 'Agents', subtitle: 'AI personas & skills' },
+  '/org-chart': { title: 'Org Chart', subtitle: 'Team structure & hierarchy' },
   '/teams': { title: 'Teams', subtitle: 'Groups of collaborating agents' },
   '/skills': { title: 'Skills', subtitle: 'Tool catalog' },
   '/memories': { title: 'Memories', subtitle: 'Long-term agent knowledge' },

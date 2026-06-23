@@ -4,6 +4,7 @@ import AppShell from './components/AppShell';
 import Dashboard from './pages/Dashboard';
 import ChatRoomPage from './pages/ChatRoom';
 import AgentChatsPage from './pages/AgentChats';
+import OrgChartPage from './pages/OrgChart';
 import AgentsPage from './pages/Agents';
 import TeamsPage from './pages/Teams';
 import SkillsPage from './pages/Skills';
@@ -66,6 +67,7 @@ const App: React.FC = () => {
           <Route path="/agent-chat/:agentId" element={<AgentChatsPage />} />
           <Route path="/kanban" element={<KanbanPage />} />
           <Route path="/kanban/:boardId" element={<KanbanPage />} />
+          <Route path="/org-chart" element={<OrgChartPage />} />
           <Route path="/agents" element={<AgentsPage />} />
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/skills" element={<SkillsPage />} />
