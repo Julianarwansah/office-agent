@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppShell from './components/AppShell';
 import Dashboard from './pages/Dashboard';
 import ChatRoomPage from './pages/ChatRoom';
+import AgentChatsPage from './pages/AgentChats';
 import AgentsPage from './pages/Agents';
 import TeamsPage from './pages/Teams';
 import SkillsPage from './pages/Skills';
@@ -61,6 +62,7 @@ const App: React.FC = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/chat" element={<ChatRoomPage />} />
           <Route path="/chat/:chatRoomId" element={<ChatRoomPage />} />
+          <Route path="/agent-chat" element={<AgentChatsPage />} />
           <Route path="/kanban" element={<KanbanPage />} />
           <Route path="/kanban/:boardId" element={<KanbanPage />} />
           <Route path="/agents" element={<AgentsPage />} />

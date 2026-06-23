@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   MessageSquare,
+  MessageCircle,
   Bot,
   Users,
   Wand2,
@@ -29,7 +30,8 @@ interface NavEntry {
 
 const NAV_ITEMS: NavEntry[] = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard, end: true },
-  { label: 'Chat', path: '/chat', icon: MessageSquare },
+  { label: 'Chatrooms', path: '/chat', icon: MessageSquare },
+  { label: 'Chat Agent', path: '/agent-chat', icon: MessageCircle },
   { label: 'Kanban', path: '/kanban', icon: KanbanSquare },
   { label: 'Agents', path: '/agents', icon: Bot },
   { label: 'Teams', path: '/teams', icon: Users },
