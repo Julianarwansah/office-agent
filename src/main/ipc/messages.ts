@@ -34,7 +34,10 @@ export function registerMessageHandlers(deps: MessageHandlerDeps): void {
       if (!args?.chatRoomId) return fail('chatRoomId is required');
       const limit = clampInt(args.limit, 1, 1000, 100);
       const offset = clampInt(args.offset, 0, Number.MAX_SAFE_INTEGER, 0);
-      return ok(repo.findByChatRoom(String(args.chatRoomId), limit, offset));
+      const messages = repo
+        .findByChatRoom(String(args.chatRoomId), limit, offset)
+        .filter((m) => !m.isStreaming);
+      return ok(messages);
     } catch (err) {
       return failErr('MESSAGE.LIST', err);
     }

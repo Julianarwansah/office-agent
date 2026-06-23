@@ -334,6 +334,7 @@ const AgentChatsPage: React.FC = () => {
                   if (!chatRoomId) return;
                   if (!window.confirm(`Hapus semua history chat dengan ${activeAgent.name}?`)) return;
                   await clearMessages(chatRoomId);
+                  loadedRef.current.delete(chatRoomId);
                 }}
                 className="rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                 title="Hapus history chat"
@@ -417,7 +418,7 @@ const AgentChatsPage: React.FC = () => {
 
             <InputArea
               onSend={handleSend}
-              onCancel={() => void cancelStream()}
+              onCancel={() => void cancelStream(chatRoomId ?? undefined)}
               isStreaming={isStreaming}
               agents={[activeAgent]}
               placeholder={`Message ${activeAgent.name}…`}

@@ -141,12 +141,10 @@ const InputArea: React.FC<InputAreaProps> = ({
       }
       if (e.key === 'Enter' || e.key === 'Tab') {
         e.preventDefault();
-        if (showAllOption && filteredAgents.length === 0) {
-          pickAll();
+        if (filteredAgents.length > 0) {
+          pickMention(filteredAgents[0]);
         } else if (showAllOption) {
           pickAll();
-        } else {
-          pickMention(filteredAgents[0]);
         }
         return;
       }

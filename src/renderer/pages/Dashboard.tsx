@@ -27,7 +27,8 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const agents = useAgentsStore((s) => s.agents);
   const teams = useAgentsStore((s) => s.teams);
-  const chatrooms = useChatRoomsStore((s) => s.chatrooms);
+  const allChatrooms = useChatRoomsStore((s) => s.chatrooms);
+  const chatrooms = allChatrooms.filter((c) => c.type !== 'direct');
   const messagesByRoom = useChatRoomsStore((s) => s.messagesByRoom);
   const providers = useLLMStore((s) => s.providers);
   const defaultProvider = useLLMStore((s) => s.defaultProvider);

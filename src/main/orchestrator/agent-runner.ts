@@ -265,7 +265,7 @@ export class AgentRunner {
       let finishReason = 'stop';
 
       if (stream) {
-        const result = await this.streamTurn(client, chatReq, assistantMessageId);
+        const result = await this.streamTurn(client, chatReq, assistantMessageId, agent.id);
         content = result.content;
         toolCalls = result.toolCalls.length > 0 ? result.toolCalls : undefined;
         finishReason = result.finishReason;
@@ -363,6 +363,7 @@ export class AgentRunner {
     client: ChatClient,
     req: ChatRequest,
     messageId: string,
+    agentId: string,
   ): Promise<{ content: string; toolCalls: LLMToolCall[]; finishReason: string }> {
     let content = '';
     const accumulator = new ToolCallAccumulator();
@@ -381,7 +382,7 @@ export class AgentRunner {
           content += delta;
           this.deps.messages.appendContent(messageId, delta);
           this.emit('agent:content', {
-            agentId: this.lastAgentId ?? '',
+            agentId,
             messageId,
             delta,
             content,
@@ -430,8 +431,6 @@ export class AgentRunner {
       finishReason,
     };
   }
-
-  private lastAgentId: string | null = null;
 
   private indexForToolCall(acc: ToolCallAccumulator, tc: LLMToolCall): number {
     // Look for an existing slot whose id matches.

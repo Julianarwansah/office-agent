@@ -29,7 +29,7 @@ interface ChatRoomsState {
 
   sendMessage: (params: ChatSendParams) => Promise<void>;
   clearMessages: (chatRoomId: string) => Promise<void>;
-  cancelStream: () => Promise<void>;
+  cancelStream: (chatRoomId?: string) => Promise<void>;
 
   clearError: () => void;
 }
@@ -185,8 +185,8 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
     }));
   },
 
-  cancelStream: async () => {
-    const roomId = get().currentChatRoomId;
+  cancelStream: async (chatRoomId?: string) => {
+    const roomId = chatRoomId ?? get().currentChatRoomId;
     try {
       unwrap(await api.chat.cancel());
     } catch (err) {

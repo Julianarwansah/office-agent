@@ -113,25 +113,6 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
 
       const userMsg = insertUserMessage(messages, chatRoomId, userMessage, args.parentMessageId);
 
-      // Decide which agent runs in streaming mode. The orchestrator's
-      // `streamChat` requires a single agent id, so we either:
-      //   - run the explicitly-mentioned agent, or
-      //   - pick the lead agent for the room, or
-      //   - pick the first agent in the room.
-      const mentionedAgentId = args.mentionedAgentIds
-        ?.map((id) => String(id))
-        .find((id) => room.agentIds.includes(id));
-      const requestedAgentId = args.agentId ? String(args.agentId) : undefined;
-      const agentId = requestedAgentId && room.agentIds.includes(requestedAgentId)
-        ? requestedAgentId
-        : mentionedAgentId || room.agentIds[0] || null;
-      if (!agentId) {
-        return fail('No agents in chatgrub to stream from');
-      }
-      if (!agents.findById(agentId)) {
-        return fail(`Agent not found: ${agentId}`);
-      }
-
       const controller = new AbortController();
       const previous = activeRun;
       activeRun = { controller, chatRoomId, startedAt: Date.now() };
@@ -143,24 +124,35 @@ export function registerChatHandlers(deps: ChatHandlerDeps): void {
         }
       }
 
-      const onChunk = (chunk: StreamChunkPayload): void => {
-        // The orchestrator already emits `agent:content` events that are
-        // forwarded to the renderer; this callback is only a hook for
-        // any future per-chunk needs (e.g. metrics).
-        void chunk;
-      };
+      // If an explicit agentId is passed (direct 1:1 chat), stream that one agent.
+      // Otherwise (group/team chatgrub), route through runTeamChat so the
+      // orchestrator can correctly handle @all, @mentions, and lead-first flow.
+      const requestedAgentId = args.agentId ? String(args.agentId) : undefined;
+      const isSingleAgent = !!(requestedAgentId && room.agentIds.includes(requestedAgentId));
 
-      void orchestrator
-        .streamChat(chatRoomId, agentId, userMessage, onChunk, {
+      if (isSingleAgent) {
+        if (!agents.findById(requestedAgentId!)) {
+          return fail(`Agent not found: ${requestedAgentId}`);
+        }
+        void orchestrator
+          .streamChat(chatRoomId, requestedAgentId!, userMessage, () => void 0, {
+            parentMessageId: args.parentMessageId ?? userMsg.id,
+            signal: controller.signal,
+          })
+          .catch((err) => log.error('streamChat failed', err))
+          .finally(() => clearActiveRun(chatRoomId, controller));
+      } else {
+        void runTeamChatAsync(orchestrator, messages, windowManager, {
+          chatRoomId,
+          userMessage,
+          userMessageId: userMsg.id,
+          agentId: undefined,
+          mentionedAgentIds: args.mentionedAgentIds,
           parentMessageId: args.parentMessageId ?? userMsg.id,
           signal: controller.signal,
-        })
-        .catch((err) => {
-          log.error('streamChat failed', err);
-        })
-        .finally(() => {
-          clearActiveRun(chatRoomId, controller);
+          onComplete: () => clearActiveRun(chatRoomId, controller),
         });
+      }
 
       return ok(userMsg);
     } catch (err) {
