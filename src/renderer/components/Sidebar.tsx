@@ -17,6 +17,7 @@ import {
   KanbanSquare,
   Network,
   TerminalSquare,
+  BarChart3,
   type LucideIcon,
 } from 'lucide-react';
 import { useAppStore } from '../stores/app';
@@ -36,6 +37,7 @@ const NAV_ITEMS: NavEntry[] = [
   { label: 'Chat Agent', path: '/agent-chat', icon: MessageCircle },
   { label: 'Kanban', path: '/kanban', icon: KanbanSquare },
   { label: 'Agents', path: '/agents', icon: Bot },
+  { label: 'Analytics', path: '/analytics', icon: BarChart3 },
   { label: 'Org Chart', path: '/org-chart', icon: Network },
   { label: 'Teams', path: '/teams', icon: Users },
   { label: 'Skills', path: '/skills', icon: Wand2 },

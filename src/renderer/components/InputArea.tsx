@@ -1,14 +1,14 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { Send, Square, AtSign, Users } from 'lucide-react';
-import type { Agent } from '../../shared/types';
-import { cn, getInitial } from '../lib/utils';
+import { Send, Square, AtSign, Users, X, CornerDownRight, User, Bot } from 'lucide-react';
+import type { Agent, Message } from '../../shared/types';
+import { cn, getInitial, truncateText } from '../lib/utils';
 
 export interface InputAreaHandle {
   focus(): void;
 }
 
 export interface InputAreaProps {
-  onSend: (message: string, mentionedAgentIds: string[]) => void;
+  onSend: (message: string, mentionedAgentIds: string[], parentMessageId?: string) => void;
   onCancel?: () => void;
   isStreaming: boolean;
   agents: Agent[];
@@ -16,6 +16,9 @@ export interface InputAreaProps {
   disabled?: boolean;
   maxRows?: number;
   initialMentionedAgentIds?: string[];
+  replyingTo?: Message | null;
+  replyingToAgentName?: string;
+  onCancelReply?: () => void;
 }
 
 interface MentionState {
@@ -33,6 +36,9 @@ const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
   disabled = false,
   maxRows = 6,
   initialMentionedAgentIds = [],
+  replyingTo,
+  replyingToAgentName,
+  onCancelReply,
 }, ref) => {
   const [value, setValue] = useState('');
   const [mentions, setMentions] = useState<string[]>(initialMentionedAgentIds);
@@ -139,13 +145,25 @@ const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
   function handleSend() {
     const trimmed = value.trim();
     if (!trimmed || isStreaming || disabled) return;
-    onSend(trimmed, [...mentions]);
+    onSend(trimmed, [...mentions], replyingTo?.id);
     setValue('');
     setMentions([]);
     setMentionAll(false);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    // Escape cancels reply mode first, then mention
+    if (e.key === 'Escape') {
+      if (replyingTo) {
+        e.preventDefault();
+        onCancelReply?.();
+        return;
+      }
+      if (mention.active) {
+        setMention({ active: false, query: '', startIndex: 0 });
+        return;
+      }
+    }
     if (mention.active && (showAllOption || filteredAgents.length > 0)) {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
@@ -160,10 +178,6 @@ const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
         }
         return;
       }
-      if (e.key === 'Escape') {
-        setMention({ active: false, query: '', startIndex: 0 });
-        return;
-      }
     }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -175,6 +189,41 @@ const InputArea = forwardRef<InputAreaHandle, InputAreaProps>(({
 
   return (
     <div className="border-t border-slate-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-800" ref={containerRef}>
+      {/* Reply indicator */}
+      {replyingTo && (
+        <div className="mb-2 flex items-center justify-between rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 dark:border-indigo-800 dark:bg-indigo-900/20">
+          <div className="flex items-center gap-2">
+            <CornerDownRight size={14} className="text-indigo-500 dark:text-indigo-400" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Replying to</span>
+              <span className="flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                {replyingTo.senderType === 'user' ? (
+                  <>
+                    <User size={10} className="text-slate-400" />
+                    You
+                  </>
+                ) : (
+                  <>
+                    <Bot size={10} className="text-indigo-400" />
+                    {replyingToAgentName ?? 'Agent'}
+                  </>
+                )}
+              </span>
+            </div>
+            <span className="text-xs text-slate-400 dark:text-slate-500">
+              "{truncateText(replyingTo.content, 50)}"
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onCancelReply}
+            className="flex h-5 w-5 items-center justify-center rounded text-slate-400 hover:bg-indigo-100 hover:text-slate-600 dark:hover:bg-indigo-900/40 dark:hover:text-slate-300"
+            title="Cancel reply"
+          >
+            <X size={12} />
+          </button>
+        </div>
+      )}
       {(mentionAll || mentionedAgents.length > 0) && (
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
           <span className="flex items-center gap-1 text-xs text-slate-500">

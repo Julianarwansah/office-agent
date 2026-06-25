@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Terminal, AlertTriangle, User, Bot, Sparkles, RefreshCw, Copy, Trash2, Check } from 'lucide-react';
+import { Terminal, AlertTriangle, User, Bot, Sparkles, RefreshCw, Copy, Trash2, Check, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import type { LLMToolCall, Message } from '../../shared/types';
 import { cn, formatTime, getInitial, renderMarkdown, copyToClipboard } from '../lib/utils';
 import { api } from '../lib/api';
@@ -11,6 +11,12 @@ export interface MessageBubbleProps {
   agentAvatar?: string;
   isStreaming?: boolean;
   showHeader?: boolean;
+  isInThread?: boolean;
+  replyCount?: number;
+  threadReplies?: Message[];
+  isThreadExpanded?: boolean;
+  onReplyClick?: () => void;
+  onToggleThread?: () => void;
   onRegenerate?: () => void;
   onDelete?: () => void;
 }
@@ -44,6 +50,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   agentAvatar,
   isStreaming,
   showHeader = true,
+  isInThread = false,
+  replyCount = 0,
+  threadReplies = [],
+  isThreadExpanded = false,
+  onReplyClick,
+  onToggleThread,
   onRegenerate,
   onDelete,
 }) => {
@@ -102,6 +114,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     return renderMarkdown(message.content);
   }, [message.content]);
 
+  // Thread reply avatars limit
+  const visibleReplies = threadReplies.slice(0, 3);
+  const hasMoreReplies = threadReplies.length > 3;
+
   if (isSystem) {
     return (
       <div className="my-3 flex justify-center animate-fade-in">
@@ -118,11 +134,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       className={cn(
         'group/bubble flex w-full gap-3 animate-fade-in',
         isUser ? 'flex-row-reverse' : 'flex-row',
+        isInThread && 'pl-8',
       )}
     >
       <div
         className={cn(
-          'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-sm font-semibold',
+          'flex flex-shrink-0 items-center justify-center rounded-xl text-sm font-semibold',
+          isInThread ? 'h-6 w-6 text-[10px]' : 'h-9 w-9',
           avatarBg,
           !isUser && !agentColor && 'ring-2 ring-white/20',
         )}
@@ -137,13 +155,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             onError={() => setAvatarBroken(true)}
           />
         ) : isUser ? (
-          <User size={16} />
+          <User size={isInThread ? 12 : 16} />
         ) : (
           initial
         )}
       </div>
 
-      <div className={cn('flex max-w-[80%] min-w-0 flex-col', isUser ? 'items-end' : 'items-start')}>
+      <div className={cn('flex min-w-0 flex-col', isUser ? 'items-end' : 'items-start', isInThread ? 'max-w-[90%]' : 'max-w-[80%]')}>
         {showHeader && (
           <div
             className={cn(
@@ -207,6 +225,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             'mt-1 flex items-center gap-1 opacity-0 transition-opacity group-hover/bubble:opacity-100',
             isUser ? 'flex-row-reverse' : 'flex-row',
           )}>
+            {/* Reply button */}
+            <button
+              type="button"
+              onClick={() => onReplyClick?.()}
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-zinc-700 dark:hover:text-slate-200"
+              title="Reply to message"
+            >
+              <MessageSquare size={10} />
+              Reply
+            </button>
             {message.content && (
               <button
                 type="button"
@@ -241,6 +269,49 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               Delete
             </button>
           </div>
+        )}
+
+        {/* Thread indicator */}
+        {replyCount > 0 && !isInThread && (
+          <button
+            type="button"
+            onClick={() => onToggleThread?.()}
+            className={cn(
+              'mt-2 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+              isThreadExpanded
+                ? 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300'
+                : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-400 dark:hover:bg-zinc-700',
+            )}
+          >
+            {isThreadExpanded ? (
+              <ChevronUp size={12} />
+            ) : (
+              <ChevronDown size={12} />
+            )}
+            <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+            {/* Avatars of thread participants */}
+            <span className="ml-1 flex -space-x-1">
+              {visibleReplies.map((reply, idx) => (
+                <span
+                  key={reply.id}
+                  className={cn(
+                    'flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-medium ring-1 ring-white dark:ring-zinc-800',
+                    reply.senderType === 'user'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                      : 'bg-indigo-500 text-white',
+                  )}
+                  title={reply.senderType === 'user' ? 'You' : 'Agent'}
+                >
+                  {reply.senderType === 'user' ? 'Y' : 'A'}
+                </span>
+              ))}
+              {hasMoreReplies && (
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-300 text-[8px] font-medium text-slate-600 ring-1 ring-white dark:bg-zinc-600 dark:text-slate-300 dark:ring-zinc-800">
+                  +
+                </span>
+              )}
+            </span>
+          </button>
         )}
       </div>
     </div>

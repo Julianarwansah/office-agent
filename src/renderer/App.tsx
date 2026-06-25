@@ -13,6 +13,7 @@ import MemoriesPage from './pages/Memories';
 import WorkspacePage from './pages/Workspace';
 import SettingsPage from './pages/Settings';
 import KanbanPage from './pages/Kanban';
+import AnalyticsPage from './pages/Analytics';
 import { useAppStore } from './stores/app';
 import { useAgentsStore } from './stores/agents';
 import { useLLMStore } from './stores/llm';
@@ -76,6 +77,7 @@ const App: React.FC = () => {
           <Route path="/workspace" element={<WorkspacePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/terminal" element={<TerminalPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AppShell>

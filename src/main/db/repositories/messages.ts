@@ -193,14 +193,80 @@ export class MessageRepository {
     db.prepare('UPDATE messages SET is_streaming = ? WHERE id = ?').run(fromIntBool(isStreaming), id);
   }
 
-  appendContent(id: string, delta: string): void {
+  findBySender(senderId: string, senderType: string, since?: number): Message[] {
     const db = getDb();
-    db.prepare(
-      `UPDATE messages
-       SET content = COALESCE(content, '') || ?,
-           is_streaming = 1
-       WHERE id = ?`
-    ).run(delta, id);
+    let sql = 'SELECT * FROM messages WHERE sender_id = ? AND sender_type = ?';
+    const params: unknown[] = [senderId, senderType];
+    if (since) {
+      sql += ' AND created_at >= ?';
+      params.push(new Date(since).toISOString());
+    }
+    sql += ' ORDER BY created_at ASC';
+    const rows = db.prepare(sql).all(...params) as MessageRow[];
+    return rows.map((r) => this.mapRow(r));
+  }
+
+  countByAgent(agentId: string, since?: number): number {
+    const db = getDb();
+    let sql = 'SELECT COUNT(*) as c FROM messages WHERE sender_id = ? AND sender_type = ?';
+    const params: unknown[] = [agentId, 'agent'];
+    if (since) {
+      sql += ' AND created_at >= ?';
+      params.push(new Date(since).toISOString());
+    }
+    const row = db.prepare(sql).get(...params) as { c: number };
+    return row.c;
+  }
+
+  getMessageCountsByDay(agentId: string, days: number): Array<{ date: string; count: number }> {
+    const db = getDb();
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const sinceIso = since.toISOString();
+
+    const rows = db
+      .prepare(
+        `SELECT DATE(created_at) as date, COUNT(*) as count
+         FROM messages
+         WHERE sender_id = ? AND sender_type = ? AND created_at >= ?
+         GROUP BY DATE(created_at)
+         ORDER BY date ASC`
+      )
+      .all(agentId, 'agent', sinceIso) as Array<{ date: string; count: number }>;
+    return rows;
+  }
+
+  // Thread support methods
+  findThreadReplies(parentId: string): Message[] {
+    const db = getDb();
+    const rows = db
+      .prepare(
+        'SELECT * FROM messages WHERE parent_id = ? ORDER BY created_at ASC'
+      )
+      .all(parentId) as MessageRow[];
+    return rows.map((r) => this.mapRow(r));
+  }
+
+  getReplyCount(parentId: string): number {
+    const db = getDb();
+    const row = db
+      .prepare('SELECT COUNT(*) as c FROM messages WHERE parent_id = ?')
+      .get(parentId) as { c: number };
+    return row.c;
+  }
+
+  findByChatRoomWithThreads(chatRoomId: string, limit = 100, offset = 0): Message[] {
+    const db = getDb();
+    // Get top-level messages (no parent) ordered by created_at
+    const rows = db
+      .prepare(
+        `SELECT * FROM messages
+         WHERE chatroom_id = ? AND parent_id IS NULL
+         ORDER BY created_at ASC
+         LIMIT ? OFFSET ?`
+      )
+      .all(chatRoomId, limit, offset) as MessageRow[];
+    return rows.map((r) => this.mapRow(r));
   }
 }
 

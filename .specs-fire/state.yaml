@@ -1,18 +1,17 @@
 project:
-  name: "office-ai-agent"
-  description: "Office AI Agent — cross-platform Electron desktop app with custom agents, skills, chatrooms, and teams"
-  created: "2026-06-23T00:00:00Z"
-  fire_version: "0.1.8"
-
+  name: office-ai-agent
+  description: Office AI Agent — cross-platform Electron desktop app with custom
+    agents, skills, chatrooms, and teams
+  created: 2026-06-23T00:00:00Z
+  fire_version: 0.1.8
 workspace:
   type: brownfield
   structure: monolith
   autonomy_bias: balanced
-  scanned_at: "2026-06-23T00:00:00Z"
-
+  scanned_at: 2026-06-23T00:00:00Z
 intents:
   - id: bug-fix-audit
-    title: "Bug Fix & Error Audit"
+    title: Bug Fix & Error Audit
     status: completed
     work_items:
       - id: fix-unwrap-void
@@ -27,9 +26,8 @@ intents:
         status: completed
         complexity: low
         mode: autopilot
-
   - id: agent-management
-    title: "Agent Management — Duplicate, Export, Import"
+    title: Agent Management — Duplicate, Export, Import
     status: completed
     work_items:
       - id: backend-ipc-handlers
@@ -40,28 +38,26 @@ intents:
         status: completed
         complexity: low
         mode: autopilot
-        depends_on: [backend-ipc-handlers]
-
+        depends_on:
+          - backend-ipc-handlers
   - id: chat-search
-    title: "Chat Search — Cari pesan dalam history chatroom"
+    title: Chat Search — Cari pesan dalam history chatroom
     status: completed
     work_items:
       - id: chat-search-ui
         status: completed
         complexity: low
         mode: autopilot
-
   - id: terminal-page
-    title: "Terminal Page"
+    title: Terminal Page
     status: completed
     work_items:
       - id: terminal-page-impl
         status: completed
         complexity: low
         mode: autopilot
-
   - id: message-regenerate
-    title: "Message Regenerate"
+    title: Message Regenerate
     status: completed
     work_items:
       - id: regenerate-backend
@@ -72,16 +68,155 @@ intents:
         status: completed
         complexity: low
         mode: autopilot
-
   - id: quick-fixes
-    title: "Quick Fixes — TopBar titles"
+    title: Quick Fixes — TopBar titles
     status: completed
     work_items:
       - id: topbar-titles
         status: completed
         complexity: low
         mode: autopilot
-
+  - id: message-threads
+    title: Message Thread/Replies
+    status: completed
+    work_items:
+      - id: msg-thread-db-schema
+        title: Database Schema Migration for Thread Support
+        status: completed
+        complexity: low
+        mode: autopilot
+      - id: msg-thread-backend-ipc
+        title: Backend IPC Handlers for Thread Operations
+        status: completed
+        complexity: low
+        mode: autopilot
+        depends_on:
+          - msg-thread-db-schema
+      - id: msg-thread-message-bubble
+        title: MessageBubble Thread UI Enhancement
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - msg-thread-backend-ipc
+      - id: msg-thread-input-mode
+        title: InputArea Reply Mode Support
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - msg-thread-backend-ipc
+      - id: msg-thread-chatroom-integration
+        title: ChatRoom Page Thread Integration
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - msg-thread-message-bubble
+          - msg-thread-input-mode
+      - id: msg-thread-orchestrator-update
+        title: Orchestrator Thread Context Support
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - msg-thread-backend-ipc
+  - id: kanban-filters-search
+    title: Kanban Filters & Search
+    status: completed
+    work_items:
+      - id: kanban-filter-ui
+        title: Kanban Filter Bar UI Components
+        status: completed
+        complexity: low
+        mode: autopilot
+      - id: kanban-filter-logic
+        title: Kanban Filter Logic Implementation
+        status: completed
+        complexity: low
+        mode: autopilot
+        depends_on:
+          - kanban-filter-ui
+      - id: kanban-filter-empty-state
+        title: Kanban Filter Empty State
+        status: completed
+        complexity: low
+        mode: autopilot
+        depends_on:
+          - kanban-filter-logic
+      - id: kanban-filter-drag-drop
+        title: Kanban Filter Drag & Drop Compatibility
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - kanban-filter-logic
+  - id: chat-history-export
+    title: Chat History Export
+    status: completed
+    work_items:
+      - id: chat-export-ui
+        title: Chat Export Button & Dialog
+        status: completed
+        complexity: low
+        mode: autopilot
+      - id: chat-export-generator
+        title: Chat Export Content Generator
+        status: completed
+        complexity: low
+        mode: autopilot
+        depends_on:
+          - chat-export-ui
+      - id: chat-export-download
+        title: Chat Export File Download
+        status: completed
+        complexity: low
+        mode: autopilot
+        depends_on:
+          - chat-export-generator
+  - id: agent-analytics
+    title: Agent Performance Analytics
+    status: completed
+    work_items:
+      - id: analytics-backend
+        title: Backend Analytics Aggregation
+        status: completed
+        complexity: medium
+        mode: confirm
+        run_id: run-office-agent-002
+        completed_at: 2026-06-25T02:47:59.038Z
+      - id: analytics-ui-page
+        title: Analytics Page UI
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - analytics-backend
+        run_id: run-office-agent-003
+        completed_at: 2026-06-25T06:28:08.201Z
+      - id: analytics-navigation
+        title: Analytics Navigation Integration
+        status: completed
+        complexity: low
+        mode: autopilot
+        depends_on:
+          - analytics-ui-page
 runs:
   active: []
-  completed: []
+  completed:
+    - id: run-office-agent-002
+      scope: single
+      work_items:
+        - id: analytics-backend
+          intent: agent-analytics
+          mode: confirm
+      started: 2026-06-24T03:32:08.035Z
+      completed: 2026-06-25T02:47:59.038Z
+    - id: run-office-agent-003
+      scope: single
+      work_items:
+        - id: analytics-ui-page
+          intent: agent-analytics
+          mode: confirm
+      started: 2026-06-25T02:51:13.977Z
+      completed: 2026-06-25T06:28:08.201Z

@@ -99,6 +99,54 @@ export function registerMessageHandlers(deps: MessageHandlerDeps): void {
       return failErr('MESSAGE.SEARCH', err);
     }
   });
+
+  // Thread support handlers
+  ipcMain.handle(IPC_CHANNELS.MESSAGE.GET_THREAD, async (
+    _evt,
+    parentMessageId: string,
+  ): Promise<ApiResponse<Message[]>> => {
+    try {
+      if (!parentMessageId || typeof parentMessageId !== 'string') {
+        return fail('parentMessageId is required');
+      }
+      const replies = repo.findThreadReplies(parentMessageId);
+      return ok(replies);
+    } catch (err) {
+      return failErr('MESSAGE.GET_THREAD', err);
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MESSAGE.SEND_REPLY, async (
+    _evt,
+    args: { parentMessageId: string; content: string; senderType?: SenderType; senderId?: string; metadata?: MessageMetadata },
+  ): Promise<ApiResponse<Message>> => {
+    try {
+      if (!args?.parentMessageId) return fail('parentMessageId is required');
+      if (!args?.content?.trim()) return fail('content is required');
+
+      // Get parent message to validate and get chatRoomId
+      const parentMessage = repo.findById(args.parentMessageId);
+      if (!parentMessage) return fail('Parent message not found');
+
+      const senderType: SenderType = SENDER_TYPES.includes(args.senderType as SenderType)
+        ? (args.senderType as SenderType)
+        : 'user';
+
+      const created = repo.create({
+        chatRoomId: parentMessage.chatRoomId,
+        senderType,
+        senderId: args.senderId ?? senderType,
+        content: args.content.trim(),
+        parentId: args.parentMessageId,
+        metadata: args.metadata,
+        isStreaming: false,
+      });
+
+      return ok(created);
+    } catch (err) {
+      return failErr('MESSAGE.SEND_REPLY', err);
+    }
+  });
 }
 
 function sanitizeMessageInput(input: Partial<Message> | undefined): import('../db/repositories/messages').MessageCreateInput {

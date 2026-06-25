@@ -17,6 +17,7 @@ export interface ChatSendParams {
   userMessage: string;
   mentionedAgentIds?: string[];
   agentId?: string;
+  parentMessageId?: string;
 }
 
 export interface StreamingMessageState {

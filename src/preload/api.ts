@@ -279,6 +279,34 @@ export interface OfficeAPI {
     clear(args: { chatRoomId: string }): Promise<ApiResponse<number>>;
     search(args: { chatRoomId: string; query: string }): Promise<ApiResponse<Message[]>>;
     regenerate(args: { messageId: string }): Promise<ApiResponse<void>>;
+    /** Get all replies for a parent message (thread) */
+    getThread(parentMessageId: string): Promise<ApiResponse<Message[]>>;
+    /** Send a reply to a specific message */
+    sendReply(args: { parentMessageId: string; content: string; senderType?: 'user' | 'agent' | 'system'; senderId?: string; metadata?: Record<string, unknown> }): Promise<ApiResponse<Message>>;
+  };
+
+  /* ----------------------------- Analytics ------------------------ */
+  analytics: {
+    agent(args: { agentId: string; timeRange?: string }): Promise<ApiResponse<{
+      agentId: string;
+      messageCount: number;
+      toolExecutionCount: number;
+      successRate: number;
+      mostUsedSkills: Array<{ skillName: string; count: number }>;
+      messageCountsByDay: Array<{ date: string; count: number }>;
+    }>>;
+    overview(args: { agentIds: string[]; timeRange?: string }): Promise<ApiResponse<{
+      totalMessages: number;
+      totalToolExecutions: number;
+      agentStats: Array<{
+        agentId: string;
+        messageCount: number;
+        toolExecutionCount: number;
+        successRate: number;
+        mostUsedSkills: Array<{ skillName: string; count: number }>;
+        messageCountsByDay: Array<{ date: string; count: number }>;
+      }>;
+    }>>;
   };
 
   /* ----------------------------- Chat ----------------------------- */

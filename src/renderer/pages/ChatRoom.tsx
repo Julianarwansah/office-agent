@@ -13,9 +13,11 @@ import {
   Search,
   X,
   Loader2,
+  Download,
+  FileText,
 } from 'lucide-react';
-import { api } from '../lib/api';
-import type { ChatRoomType, Message } from '../../shared/types';
+import { api, unwrap } from '../lib/api';
+import type { ChatRoomType, Message, Agent } from '../../shared/types';
 import { useChatRoomsStore } from '../stores/chatrooms';
 import { useAgentsStore } from '../stores/agents';
 import Modal from '../components/ui/Modal';
@@ -24,7 +26,7 @@ import Input, { Textarea, Select } from '../components/ui/Input';
 import MessageBubble from '../components/MessageBubble';
 import InputArea from '../components/InputArea';
 import type { ChatRoomFormData } from '../lib/types';
-import { cn, formatRelative, getInitial } from '../lib/utils';
+import { cn, formatRelative, getInitial, formatDateTime } from '../lib/utils';
 
 const TYPE_OPTIONS: Array<{ value: ChatRoomType; label: string }> = [
   { value: 'direct', label: 'Direct - 1:1 with an agent' },
@@ -47,6 +49,7 @@ const ChatRoomPage: React.FC = () => {
   const sendMessage = useChatRoomsStore((s) => s.sendMessage);
   const cancelStream = useChatRoomsStore((s) => s.cancelStream);
   const removeMessage = useChatRoomsStore((s) => s.removeMessage);
+  const appendMessage = useChatRoomsStore((s) => s.appendMessage);
   const createChatRoom = useChatRoomsStore((s) => s.createChatRoom);
   const updateChatRoom = useChatRoomsStore((s) => s.updateChatRoom);
   const deleteChatRoom = useChatRoomsStore((s) => s.deleteChatRoom);
@@ -69,6 +72,17 @@ const ChatRoomPage: React.FC = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Thread state
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
+  const [threadReplies, setThreadReplies] = useState<Record<string, Message[]>>({});
+  const [replyCounts, setReplyCounts] = useState<Record<string, number>>({});
+
+  // Export state
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'markdown' | 'text'>('markdown');
+  const [exporting, setExporting] = useState(false);
 
   const effectiveId = chatRoomId ?? currentChatRoomId ?? null;
 
@@ -121,18 +135,38 @@ const ChatRoomPage: React.FC = () => {
     }
   }, [activeMessages.length, activeStreaming.length, activeStreaming.map((s) => s.content).join('|')]);
 
-  async function handleSend(text: string, mentionedAgentIds: string[]) {
+  const handleSend = useCallback(async (text: string, mentionedAgentIds: string[], parentMessageId?: string) => {
     if (!effectiveId) return;
     try {
-      await sendMessage({
-        chatRoomId: effectiveId,
-        userMessage: text,
-        mentionedAgentIds,
-      });
+      if (parentMessageId) {
+        // Sending a reply
+        const reply = unwrap(await api.messages.sendReply({
+          parentMessageId,
+          content: text,
+          senderType: 'user',
+          senderId: 'user',
+        }));
+        // Add reply to store
+        set((s) => {
+          const existing = s.messagesByRoom[effectiveId] ?? [];
+          return {
+            messagesByRoom: {
+              ...s.messagesByRoom,
+              [effectiveId]: [...existing, reply],
+            },
+          };
+        });
+      } else {
+        await sendMessage({
+          chatRoomId: effectiveId,
+          userMessage: text,
+          mentionedAgentIds,
+        });
+      }
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Failed to send');
     }
-  }
+  }, [effectiveId, sendMessage]);
 
   async function handleCreate(data: ChatRoomFormData) {
     const created = await createChatRoom(data);
@@ -151,6 +185,57 @@ const ChatRoomPage: React.FC = () => {
     await deleteChatRoom(id);
     navigate('/chat');
   }
+
+  async function handleReplyClick(message: Message) {
+    setReplyingTo(message);
+  }
+
+  async function handleToggleThread(messageId: string) {
+    const isExpanded = expandedThreads.has(messageId);
+    if (isExpanded) {
+      // Collapse
+      setExpandedThreads((prev) => {
+        const next = new Set(prev);
+        next.delete(messageId);
+        return next;
+      });
+    } else {
+      // Expand and load replies
+      setExpandedThreads((prev) => new Set(prev).add(messageId));
+      try {
+        const replies = unwrap(await api.messages.getThread(messageId));
+        setThreadReplies((prev) => ({ ...prev, [messageId]: replies }));
+      } catch (err) {
+        console.error('Failed to load thread:', err);
+      }
+    }
+  }
+
+  function handleCancelReply() {
+    setReplyingTo(null);
+  }
+
+  // Load reply counts for visible messages
+  useEffect(() => {
+    async function loadReplyCounts() {
+      if (!effectiveId) return;
+      const messages = activeMessages.filter((m) => !m.parentId);
+      const counts: Record<string, number> = {};
+      for (const m of messages) {
+        try {
+          // Use the repository method via IPC
+          const res = await api.messages.getThread(m.id);
+          if (res.success && res.data) {
+            counts[m.id] = res.data.length;
+          }
+        } catch {
+          // Ignore errors
+        }
+      }
+      setReplyCounts(counts);
+    }
+    loadReplyCounts();
+  }, [effectiveId, activeMessages]);
 
   const handleSearch = useCallback(async (query: string) => {
     if (!effectiveId || !query.trim()) { setSearchResults([]); return; }
@@ -287,6 +372,15 @@ const ChatRoomPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setExportOpen(true)}
+                  disabled={activeMessages.length === 0}
+                  className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed dark:hover:bg-zinc-700 dark:hover:text-slate-100"
+                  title="Export chat"
+                >
+                  <Download size={15} />
+                </button>
+                <button
+                  type="button"
                   onClick={() => setEditOpen(true)}
                   className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
                   title="Edit chatgrub"
@@ -341,29 +435,59 @@ const ChatRoomPage: React.FC = () => {
                 )}
 
                 {activeMessages
+                  .filter((m) => !m.parentId) // Only show top-level messages
                   .filter((m) => m.senderType === 'user' || !!(m.content?.trim()) || !!(m.toolCalls?.length))
                   .map((m) => {
-                  const agent = agentsById.get(m.senderId);
-                  return (
-                    <div
-                      key={m.id}
-                      id={`msg-${m.id}`}
-                      className={cn(
-                        'rounded-xl transition-all duration-500',
-                        highlightedMsgId === m.id && 'ring-2 ring-slate-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-zinc-900',
-                      )}
-                    >
-                      <MessageBubble
-                        message={m}
-                        agentName={agent?.name}
-                        agentColor={agent?.color}
-                        agentAvatar={agent?.avatar}
-                        onRegenerate={() => effectiveId && removeMessage(effectiveId, m.id)}
-                        onDelete={() => effectiveId && removeMessage(effectiveId, m.id)}
-                      />
-                    </div>
-                  );
-                })}
+                    const agent = agentsById.get(m.senderId);
+                    const isExpanded = expandedThreads.has(m.id);
+                    const replies = threadReplies[m.id] ?? [];
+                    const replyCount = replyCounts[m.id] ?? 0;
+
+                    return (
+                      <div
+                        key={m.id}
+                        id={`msg-${m.id}`}
+                        className={cn(
+                          'rounded-xl transition-all duration-500',
+                          highlightedMsgId === m.id && 'ring-2 ring-slate-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-zinc-900',
+                        )}
+                      >
+                        <MessageBubble
+                          message={m}
+                          agentName={agent?.name}
+                          agentColor={agent?.color}
+                          agentAvatar={agent?.avatar}
+                          replyCount={replyCount}
+                          threadReplies={replies}
+                          isThreadExpanded={isExpanded}
+                          onReplyClick={() => handleReplyClick(m)}
+                          onToggleThread={() => handleToggleThread(m.id)}
+                          onRegenerate={() => effectiveId && removeMessage(effectiveId, m.id)}
+                          onDelete={() => effectiveId && removeMessage(effectiveId, m.id)}
+                        />
+
+                        {/* Thread replies */}
+                        {isExpanded && replies.length > 0 && (
+                          <div className="mt-2 space-y-2 border-l-2 border-slate-200 pl-4 dark:border-zinc-700">
+                            {replies.map((reply) => {
+                              const replyAgent = agentsById.get(reply.senderId);
+                              return (
+                                <MessageBubble
+                                  key={reply.id}
+                                  message={reply}
+                                  agentName={replyAgent?.name}
+                                  agentColor={replyAgent?.color}
+                                  agentAvatar={replyAgent?.avatar}
+                                  isInThread
+                                  onDelete={() => effectiveId && removeMessage(effectiveId, reply.id)}
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
 
                 {activeStreaming.map((s) => {
                   const agent = agentsById.get(s.agentId);
@@ -402,7 +526,10 @@ const ChatRoomPage: React.FC = () => {
               onCancel={() => void cancelStream()}
               isStreaming={isStreaming}
               agents={agents}
-              placeholder="Send a message…"
+              placeholder={replyingTo ? 'Write a reply…' : 'Send a message…'}
+              replyingTo={replyingTo}
+              replyingToAgentName={replyingTo ? agentsById.get(replyingTo.senderId)?.name : undefined}
+              onCancelReply={handleCancelReply}
             />
           </>
         )}
@@ -520,6 +647,16 @@ const ChatRoomPage: React.FC = () => {
           onClose={() => setEditOpen(false)}
           onSave={handleEdit}
           chatroom={activeChatroom}
+        />
+      )}
+
+      {activeChatroom && (
+        <ExportChatModal
+          open={exportOpen}
+          onClose={() => setExportOpen(false)}
+          chatroomName={activeChatroom.name}
+          messages={activeMessages}
+          agentsById={agentsById}
         />
       )}
     </div>
@@ -832,3 +969,223 @@ const EditChatRoomModal: React.FC<EditChatRoomModalProps> = ({ open, onClose, on
 };
 
 export default ChatRoomPage;
+
+/* ====================================================================== */
+/* Export Chat Modal                                                      */
+/* ====================================================================== */
+
+interface ExportChatModalProps {
+  open: boolean;
+  onClose: () => void;
+  chatroomName: string;
+  messages: Message[];
+  agentsById: Map<string, Agent>;
+}
+
+const ExportChatModal: React.FC<ExportChatModalProps> = ({ open, onClose, chatroomName, messages, agentsById }) => {
+  const [format, setFormat] = useState<'markdown' | 'text'>('markdown');
+  const [exporting, setExporting] = useState(false);
+
+  function generateMarkdown(): string {
+    const now = new Date().toISOString();
+    const lines: string[] = [
+      '---',
+      `chatroom: "${chatroomName}"`,
+      `exported_at: "${now}"`,
+      `message_count: ${messages.length}`,
+      '---',
+      '',
+      `# Chat History: ${chatroomName}`,
+      '',
+      `Exported on ${formatDateTime(Date.now())}`,
+      '',
+      '---',
+      '',
+    ];
+
+    for (const msg of messages) {
+      const timestamp = formatDateTime(msg.createdAt);
+      const senderName = msg.senderType === 'user' ? 'You' : agentsById.get(msg.senderId)?.name ?? 'Agent';
+      const senderType = msg.senderType === 'user' ? 'User' : 'Agent';
+
+      lines.push(`## ${timestamp} — ${senderName} (${senderType})`);
+      lines.push('');
+
+      if (msg.content) {
+        lines.push(msg.content);
+        lines.push('');
+      }
+
+      if (msg.toolCalls && msg.toolCalls.length > 0) {
+        for (const tc of msg.toolCalls) {
+          lines.push(`**Tool Call:** \`${tc.function.name}\``);
+          lines.push('```json');
+          lines.push(tc.function.arguments);
+          lines.push('```');
+          lines.push('');
+        }
+      }
+
+      if (msg.parentId) {
+        lines.push(`_Reply to message ${msg.parentId}_`);
+        lines.push('');
+      }
+
+      lines.push('---');
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+
+  function generateText(): string {
+    const lines: string[] = [
+      `Chat History: ${chatroomName}`,
+      `Exported: ${formatDateTime(Date.now())}`,
+      `Messages: ${messages.length}`,
+      '',
+      '========================================',
+      '',
+    ];
+
+    for (const msg of messages) {
+      const timestamp = formatDateTime(msg.createdAt);
+      const senderName = msg.senderType === 'user' ? 'You' : agentsById.get(msg.senderId)?.name ?? 'Agent';
+
+      lines.push(`[${timestamp}] ${senderName}:`);
+      lines.push('');
+
+      if (msg.content) {
+        lines.push(msg.content);
+        lines.push('');
+      }
+
+      if (msg.toolCalls && msg.toolCalls.length > 0) {
+        for (const tc of msg.toolCalls) {
+          lines.push(`Tool: ${tc.function.name}`);
+          lines.push(`Args: ${tc.function.arguments}`);
+          lines.push('');
+        }
+      }
+
+      lines.push('----------------------------------------');
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+
+  function sanitizeFilename(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const content = format === 'markdown' ? generateMarkdown() : generateText();
+      const ext = format === 'markdown' ? 'md' : 'txt';
+      const filename = `${sanitizeFilename(chatroomName)}_${new Date().toISOString().split('T')[0]}.${ext}`;
+      const mimeType = format === 'markdown' ? 'text/markdown' : 'text/plain';
+
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      onClose();
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Export Chat History"
+      size="sm"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={exporting}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleExport}
+            loading={exporting}
+            leftIcon={<Download size={14} />}
+          >
+            Export
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Export {messages.length} messages from "{chatroomName}"
+        </p>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Format</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setFormat('markdown')}
+              className={cn(
+                'flex flex-1 items-center gap-2 rounded-md border px-3 py-2 text-sm',
+                format === 'markdown'
+                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300'
+                  : 'border-slate-200 bg-white text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-300',
+              )}
+            >
+              <FileText size={16} />
+              Markdown
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormat('text')}
+              className={cn(
+                'flex flex-1 items-center gap-2 rounded-md border px-3 py-2 text-sm',
+                format === 'text'
+                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300'
+                  : 'border-slate-200 bg-white text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-300',
+              )}
+            >
+              <FileText size={16} />
+              Plain Text
+            </button>
+          </div>
+        </div>
+
+        <div className="text-xs text-slate-500 dark:text-slate-500">
+          {format === 'markdown' ? (
+            <>
+              <p>Markdown format includes:</p>
+              <ul className="mt-1 list-inside list-disc">
+                <li>Message timestamps and sender info</li>
+                <li>Formatted content with markdown preserved</li>
+                <li>Tool calls displayed as code blocks</li>
+              </ul>
+            </>
+          ) : (
+            <>
+              <p>Plain text format includes:</p>
+              <ul className="mt-1 list-inside list-disc">
+                <li>Message timestamps and sender info</li>
+                <li>Simple plain text content</li>
+              </ul>
+            </>
+          )}
+        </div>
+      </div>
+    </Modal>
+  );
+};

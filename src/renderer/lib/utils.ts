@@ -250,6 +250,10 @@ export function truncate(text: string, maxLen: number, suffix: string = '...'): 
   return text.slice(0, keep) + suffix;
 }
 
+export function truncateText(text: string, maxLen: number): string {
+  return truncate(text, maxLen, '...');
+}
+
 export function isMac(): boolean {
   if (typeof navigator === 'undefined') return false;
   return /Mac|iPhone|iPad|iPod/.test(navigator.platform);

@@ -415,6 +415,17 @@ class DatabaseManager {
           CREATE INDEX IF NOT EXISTS idx_kanban_events_board ON kanban_task_events(board_id, created_at);
         `,
       },
+      {
+        name: '005_thread_support',
+        up: `
+          -- Index untuk mencari replies by parent message
+          CREATE INDEX IF NOT EXISTS idx_messages_parent ON messages(parent_id);
+          -- Index untuk thread ordering (parent + created_at)
+          CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(parent_id, created_at);
+          -- Index untuk mengecek apakah message punya replies (covering index)
+          CREATE INDEX IF NOT EXISTS idx_messages_has_replies ON messages(chatroom_id, parent_id) WHERE parent_id IS NOT NULL;
+        `,
+      },
     ];
 
     const insert = db.prepare('INSERT INTO _migrations (name, applied_at) VALUES (?, ?)');

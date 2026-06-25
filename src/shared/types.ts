@@ -465,6 +465,8 @@ export const IPC_CHANNELS = {
     STREAM: 'message:stream',
     CLEAR: 'message:clear',
     REGENERATE: 'message:regenerate',
+    GET_THREAD: 'message:get-thread',
+    SEND_REPLY: 'message:send-reply',
   },
   CHAT: {
     SEND: 'chat:send',
@@ -577,6 +579,10 @@ export const IPC_CHANNELS = {
     DELETE_TASK: 'kanban:delete-task',
     LIST_EVENTS: 'kanban:list-events',
     ADD_EVENT: 'kanban:add-event',
+  },
+  ANALYTICS: {
+    AGENT: 'analytics:agent',
+    OVERVIEW: 'analytics:overview',
   },
 } as const;
 

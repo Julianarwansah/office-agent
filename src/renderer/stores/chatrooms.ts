@@ -166,7 +166,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
   },
 
   sendMessage: async (params) => {
-    const { chatRoomId, userMessage, mentionedAgentIds, agentId } = params;
+    const { chatRoomId, userMessage, mentionedAgentIds, agentId, parentMessageId } = params;
     set({ sendError: null });
     try {
       const userMsg = unwrap(
@@ -175,6 +175,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
           userMessage,
           mentionedAgentIds,
           agentId,
+          parentMessageId,
         } as unknown as Parameters<typeof api.chat.stream>[0]),
       );
 

@@ -253,6 +253,40 @@ const officeAPI: OfficeAPI = {
     regenerate(args) {
       return invoke<void>(IPC_CHANNELS.MESSAGE.REGENERATE, args);
     },
+    getThread(parentMessageId) {
+      return invoke<Message[]>(IPC_CHANNELS.MESSAGE.GET_THREAD, parentMessageId);
+    },
+    sendReply(args) {
+      return invoke<Message>(IPC_CHANNELS.MESSAGE.SEND_REPLY, args);
+    },
+  },
+
+  /* ----------------------------- Analytics ------------------------ */
+  analytics: {
+    agent(args) {
+      return invoke<{
+        agentId: string;
+        messageCount: number;
+        toolExecutionCount: number;
+        successRate: number;
+        mostUsedSkills: Array<{ skillName: string; count: number }>;
+        messageCountsByDay: Array<{ date: string; count: number }>;
+      }>(IPC_CHANNELS.ANALYTICS.AGENT, args);
+    },
+    overview(args) {
+      return invoke<{
+        totalMessages: number;
+        totalToolExecutions: number;
+        agentStats: Array<{
+          agentId: string;
+          messageCount: number;
+          toolExecutionCount: number;
+          successRate: number;
+          mostUsedSkills: Array<{ skillName: string; count: number }>;
+          messageCountsByDay: Array<{ date: string; count: number }>;
+        }>;
+      }>(IPC_CHANNELS.ANALYTICS.OVERVIEW, args);
+    },
   },
 
   /* ----------------------------- Chat ----------------------------- */

@@ -19,6 +19,10 @@ import {
   Wand2,
   Send,
   RefreshCw,
+  Search,
+  Filter,
+  X,
+  Check,
 } from 'lucide-react';
 import { useKanbanStore } from '../stores/kanban';
 import { useAgentsStore } from '../stores/agents';
@@ -245,6 +249,132 @@ interface BoardCardProps {
   onDelete: (e: React.MouseEvent) => void;
 }
 
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+interface FilterDropdownProps {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  options: FilterOption[];
+  selected: string[];
+  onChange: (selected: string[]) => void;
+  colorMap?: Record<string, string>;
+}
+
+const FilterDropdown: React.FC<FilterDropdownProps> = ({ icon: Icon, label, options, selected, onChange, colorMap }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const toggleOption = (value: string) => {
+    if (selected.includes(value)) {
+      onChange(selected.filter((v) => v !== value));
+    } else {
+      onChange([...selected, value]);
+    }
+  };
+
+  const isActive = selected.length > 0;
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          'flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium transition-colors',
+          isOpen
+            ? 'bg-slate-200 text-slate-900 dark:bg-zinc-700 dark:text-slate-100'
+            : isActive
+              ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+              : 'bg-white text-slate-600 hover:bg-slate-100 dark:bg-zinc-800 dark:text-slate-400 dark:hover:bg-zinc-700',
+          'border',
+          isActive ? 'border-indigo-200 dark:border-indigo-800' : 'border-slate-200 dark:border-zinc-700',
+        )}
+      >
+        <Icon size={14} />
+        <span>{label}</span>
+        {selected.length > 0 && (
+          <span className="ml-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-indigo-600 px-1 text-xs font-semibold text-white">
+            {selected.length}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-full z-20 mt-1 min-w-[180px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+          <div className="border-b border-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500 dark:border-zinc-700 dark:text-slate-400">
+            {label}
+          </div>
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => toggleOption(opt.value)}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-slate-50 dark:hover:bg-zinc-700/60"
+            >
+              <span className={cn(
+                'flex h-4 w-4 items-center justify-center rounded border',
+                selected.includes(opt.value)
+                  ? 'border-indigo-500 bg-indigo-500 text-white'
+                  : 'border-slate-300 bg-white dark:border-zinc-600 dark:bg-zinc-800',
+              )}>
+                {selected.includes(opt.value) && <Check size={10} />}
+              </span>
+              {colorMap && colorMap[opt.value] && (
+                <span className={cn('h-2 w-2 rounded-full', colorMap[opt.value])} />
+              )}
+              <span className="text-slate-700 dark:text-slate-200">{opt.label}</span>
+            </button>
+          ))}
+          {selected.length > 0 && (
+            <div className="border-t border-slate-100 px-3 py-1.5 dark:border-zinc-700">
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface FilterBadgeProps {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  onRemove: () => void;
+}
+
+const FilterBadge: React.FC<FilterBadgeProps> = ({ icon: Icon, label, onRemove }) => (
+  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+    <Icon size={10} />
+    <span>{label}</span>
+    <button
+      type="button"
+      onClick={onRemove}
+      className="ml-1 rounded-full p-0.5 hover:bg-indigo-100 dark:hover:bg-indigo-900/50"
+    >
+      <X size={10} />
+    </button>
+  </span>
+);
+
 const BoardCard: React.FC<BoardCardProps> = ({ board, onOpen, onEdit, onDelete }) => {
   return (
     <div
@@ -449,6 +579,28 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
   const [aiPlanOpen, setAiPlanOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<KanbanTaskStatus[]>([]);
+  const [priorityFilter, setPriorityFilter] = useState<KanbanTaskPriority[]>([]);
+  const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset filters when board changes
+  useEffect(() => {
+    setSearchQuery('');
+    setDebouncedSearch('');
+    setStatusFilter([]);
+    setPriorityFilter([]);
+    setAssigneeFilter([]);
+  }, [boardId]);
+
   useEffect(() => {
     void refreshBoards();
     void loadColumns(boardId);
@@ -468,6 +620,49 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
     }
     return map;
   }, [tasks]);
+
+  // Filtered tasks
+  const filteredTasksByColumn = useMemo(() => {
+    const map = new Map<string, KanbanTask[]>();
+    const query = debouncedSearch.toLowerCase().trim();
+
+    for (const [columnId, taskList] of tasksByColumn.entries()) {
+      const filtered = taskList.filter((t) => {
+        // Search filter
+        if (query) {
+          const matchTitle = t.title.toLowerCase().includes(query);
+          const matchDesc = t.description?.toLowerCase().includes(query) ?? false;
+          if (!matchTitle && !matchDesc) return false;
+        }
+
+        // Status filter
+        if (statusFilter.length > 0 && !statusFilter.includes(t.status)) {
+          return false;
+        }
+
+        // Priority filter
+        if (priorityFilter.length > 0 && !priorityFilter.includes(t.priority)) {
+          return false;
+        }
+
+        // Assignee filter
+        if (assigneeFilter.length > 0) {
+          const isUnassigned = !t.assigneeAgentId;
+          const matchesAssignee = t.assigneeAgentId && assigneeFilter.includes(t.assigneeAgentId);
+          const includeUnassigned = assigneeFilter.includes('unassigned');
+          if (!matchesAssignee && !(isUnassigned && includeUnassigned)) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+      map.set(columnId, filtered);
+    }
+    return map;
+  }, [tasksByColumn, debouncedSearch, statusFilter, priorityFilter, assigneeFilter]);
+
+  const hasActiveFilters = debouncedSearch || statusFilter.length > 0 || priorityFilter.length > 0 || assigneeFilter.length > 0;
 
   async function handleRefresh() {
     setRefreshing(true);
@@ -551,12 +746,145 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
         </div>
       </div>
 
+      {/* Filter Bar */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-1 items-center gap-2">
+          <div className="relative flex-1 max-w-sm">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks..."
+              className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-8 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-slate-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-100"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+
+          <FilterDropdown
+            icon={Flag}
+            label="Status"
+            options={[
+              { value: 'todo', label: 'To Do' },
+              { value: 'in_progress', label: 'In Progress' },
+              { value: 'review', label: 'Review' },
+              { value: 'done', label: 'Done' },
+              { value: 'blocked', label: 'Blocked' },
+            ]}
+            selected={statusFilter}
+            onChange={setStatusFilter}
+            colorMap={{
+              todo: 'bg-slate-400',
+              in_progress: 'bg-blue-400',
+              review: 'bg-yellow-400',
+              done: 'bg-green-400',
+              blocked: 'bg-red-400',
+            }}
+          />
+
+          <FilterDropdown
+            icon={Flag}
+            label="Priority"
+            options={[
+              { value: 'low', label: 'Low' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'high', label: 'High' },
+              { value: 'urgent', label: 'Urgent' },
+            ]}
+            selected={priorityFilter}
+            onChange={setPriorityFilter}
+            colorMap={{
+              low: 'bg-slate-400',
+              medium: 'bg-blue-400',
+              high: 'bg-orange-400',
+              urgent: 'bg-red-400',
+            }}
+          />
+
+          <FilterDropdown
+            icon={UserIcon}
+            label="Assignee"
+            options={[
+              { value: 'unassigned', label: 'Unassigned' },
+              ...agentsList.map((a) => ({ value: a.id, label: a.name })),
+            ]}
+            selected={assigneeFilter}
+            onChange={setAssigneeFilter}
+          />
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setStatusFilter([]);
+                setPriorityFilter([]);
+                setAssigneeFilter([]);
+              }}
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-zinc-800"
+            >
+              <X size={12} />
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Active Filter Badges */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-1">
+          {debouncedSearch && (
+            <FilterBadge
+              icon={Search}
+              label={`Search: "${debouncedSearch}"`}
+              onRemove={() => setSearchQuery('')}
+            />
+          )}
+          {statusFilter.map((s) => (
+            <FilterBadge
+              key={s}
+              icon={Flag}
+              label={STATUS_LABEL[s]}
+              onRemove={() => setStatusFilter((prev) => prev.filter((x) => x !== s))}
+            />
+          ))}
+          {priorityFilter.map((p) => (
+            <FilterBadge
+              key={p}
+              icon={Flag}
+              label={`Priority: ${p.charAt(0).toUpperCase() + p.slice(1)}`}
+              onRemove={() => setPriorityFilter((prev) => prev.filter((x) => x !== p))}
+            />
+          ))}
+          {assigneeFilter.map((a) => {
+            const agent = agentsById.get(a);
+            const label = a === 'unassigned' ? 'Unassigned' : agent?.name ?? 'Unknown';
+            return (
+              <FilterBadge
+                key={a}
+                icon={UserIcon}
+                label={`Assignee: ${label}`}
+                onRemove={() => setAssigneeFilter((prev) => prev.filter((x) => x !== a))}
+              />
+            );
+          })}
+        </div>
+      )}
+
       <div className="flex flex-1 gap-3 overflow-x-auto overflow-y-hidden pb-2 scrollbar-thin">
         {columns.map((col) => (
           <KanbanColumnView
             key={col.id}
             column={col}
-            tasks={tasksByColumn.get(col.id) ?? []}
+            tasks={filteredTasksByColumn.get(col.id) ?? []}
             agentsById={agentsById}
             onAddTask={() => setCreatingForColumn(col.id)}
             onEditColumn={() => setEditingColumn(col)}
@@ -570,6 +898,8 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
               await deleteTask(t.id);
             }}
             onMoveTask={handleMoveTask}
+            isFiltered={hasActiveFilters}
+            totalTaskCount={(tasksByColumn.get(col.id) ?? []).length}
           />
         ))}
         <button
@@ -732,6 +1062,8 @@ interface KanbanColumnViewProps {
   onEditTask: (t: KanbanTask) => void;
   onDeleteTask: (t: KanbanTask) => void;
   onMoveTask: (taskId: string, toColumnId: string) => void;
+  isFiltered?: boolean;
+  totalTaskCount?: number;
 }
 
 const KanbanColumnView: React.FC<KanbanColumnViewProps> = ({
@@ -744,9 +1076,13 @@ const KanbanColumnView: React.FC<KanbanColumnViewProps> = ({
   onEditTask,
   onDeleteTask,
   onMoveTask,
+  isFiltered,
+  totalTaskCount,
 }) => {
   const [hovered, setHovered] = useState(false);
   const [editingMenu, setEditingMenu] = useState(false);
+
+  const showEmptyFiltered = isFiltered && tasks.length === 0 && (totalTaskCount ?? 0) > 0;
 
   return (
     <div
@@ -769,8 +1105,13 @@ const KanbanColumnView: React.FC<KanbanColumnViewProps> = ({
       <header className={cn('flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm font-medium', COLUMN_COLORS[column.status])}>
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate">{column.name}</span>
-          <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
-            {tasks.length}
+          <span className={cn(
+            'rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
+            isFiltered
+              ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
+              : 'bg-white/70 text-slate-700 dark:bg-slate-900/60 dark:text-slate-200',
+          )}>
+            {tasks.length}{isFiltered && totalTaskCount !== undefined && totalTaskCount > 0 && `/${totalTaskCount}`}
           </span>
           {typeof column.wipLimit === 'number' && column.wipLimit > 0 && tasks.length > column.wipLimit && (
             <span className="rounded-full bg-red-200 px-1.5 py-0.5 text-[10px] font-semibold text-red-800 dark:bg-red-900/50 dark:text-red-200">
@@ -820,9 +1161,15 @@ const KanbanColumnView: React.FC<KanbanColumnViewProps> = ({
       </header>
 
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto pb-1 scrollbar-thin">
-        {tasks.length === 0 && (
+        {tasks.length === 0 && !showEmptyFiltered && (
           <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-400 dark:border-slate-700">
             Drop tasks here
+          </div>
+        )}
+        {showEmptyFiltered && (
+          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 px-3 py-6 text-center dark:border-slate-700">
+            <Filter size={20} className="mb-1 text-slate-300 dark:text-slate-600" />
+            <p className="text-xs text-slate-400 dark:text-slate-500">No tasks match filters</p>
           </div>
         )}
         {tasks.map((t) => (

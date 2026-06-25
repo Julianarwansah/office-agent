@@ -169,6 +169,57 @@ export class ToolExecutionRepository {
       .get(chatRoomId) as { c: number };
     return row.c;
   }
+
+  countByAgent(agentId: string, since?: number): number {
+    const db = getDb();
+    let sql = `SELECT COUNT(*) as c FROM tool_executions te
+               INNER JOIN messages m ON m.id = te.message_id
+               WHERE m.sender_id = ? AND m.sender_type = 'agent'`;
+    const params: unknown[] = [agentId];
+    if (since) {
+      sql += ' AND te.started_at >= ?';
+      params.push(new Date(since).toISOString());
+    }
+    const row = db.prepare(sql).get(...params) as { c: number };
+    return row.c;
+  }
+
+  getSuccessRateByAgent(agentId: string, since?: number): { total: number; success: number; rate: number } {
+    const db = getDb();
+    let sql = `SELECT
+                 COUNT(*) as total,
+                 SUM(CASE WHEN te.status = 'success' THEN 1 ELSE 0 END) as success
+               FROM tool_executions te
+               INNER JOIN messages m ON m.id = te.message_id
+               WHERE m.sender_id = ? AND m.sender_type = 'agent'`;
+    const params: unknown[] = [agentId];
+    if (since) {
+      sql += ' AND te.started_at >= ?';
+      params.push(new Date(since).toISOString());
+    }
+    const row = db.prepare(sql).get(...params) as { total: number; success: number };
+    const rate = row.total > 0 ? (row.success / row.total) * 100 : 0;
+    return { total: row.total, success: row.success, rate: Math.round(rate) };
+  }
+
+  getMostUsedSkills(agentId: string, limit = 10, since?: number): Array<{ skillName: string; count: number }> {
+    const db = getDb();
+    let sql = `SELECT te.tool_name as skill_name, COUNT(*) as count
+               FROM tool_executions te
+               INNER JOIN messages m ON m.id = te.message_id
+               WHERE m.sender_id = ? AND m.sender_type = 'agent'`;
+    const params: unknown[] = [agentId];
+    if (since) {
+      sql += ' AND te.started_at >= ?';
+      params.push(new Date(since).toISOString());
+    }
+    sql += ` GROUP BY te.tool_name
+             ORDER BY count DESC
+             LIMIT ?`;
+    params.push(limit);
+    const rows = db.prepare(sql).all(...params) as Array<{ skill_name: string; count: number }>;
+    return rows.map((r) => ({ skillName: r.skill_name, count: r.count }));
+  }
 }
 
 export const toolExecutions = new ToolExecutionRepository();
