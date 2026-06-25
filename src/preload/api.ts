@@ -29,6 +29,7 @@ import type {
   LLMProvider,
   Memory,
   Message,
+  Notification,
   Team,
   Workspace,
   WorkspaceFile,
@@ -496,6 +497,15 @@ export interface OfficeAPI {
       message?: string;
       metadata?: Record<string, unknown>;
     }): Promise<ApiResponse<KanbanTaskEvent>>;
+  };
+
+  /* ------------------------- Notifications ----------------------- */
+  notifications: {
+    list(): Promise<ApiResponse<Notification[]>>;
+    unreadCount(): Promise<ApiResponse<number>>;
+    markRead(id: string): Promise<ApiResponse<void>>;
+    markAllRead(): Promise<ApiResponse<void>>;
+    clearAll(): Promise<ApiResponse<void>>;
   };
 
   /* ----------------------------- Events --------------------------- */

@@ -171,6 +171,19 @@ export interface Message {
   metadata?: MessageMetadata;
 }
 
+export type NotificationType = 'agent_done' | 'agent_error' | 'agent_input_needed' | 'info';
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  chatroomId?: string;
+  agentId?: string;
+  isRead: boolean;
+  createdAt: number;
+}
+
 export type MemoryType = 'short_term' | 'long_term' | 'episodic' | 'semantic';
 export type MemoryCategory = 'user_preference' | 'fact' | 'instruction' | 'context' | 'task';
 
@@ -583,6 +596,13 @@ export const IPC_CHANNELS = {
   ANALYTICS: {
     AGENT: 'analytics:agent',
     OVERVIEW: 'analytics:overview',
+  },
+  NOTIFICATIONS: {
+    LIST: 'notifications:list',
+    UNREAD_COUNT: 'notifications:unread-count',
+    MARK_READ: 'notifications:mark-read',
+    MARK_ALL_READ: 'notifications:mark-all-read',
+    CLEAR_ALL: 'notifications:clear-all',
   },
 } as const;
 

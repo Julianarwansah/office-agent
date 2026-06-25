@@ -41,7 +41,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setTheme: (theme) => {
     applyTheme(theme);
     set({ theme });
-    get().saveSettings({ theme }).catch(() => {});
+    get().saveSettings({ theme }).catch((err) => console.error('[AppStore] Failed to save theme:', err));
   },
 
   sidebarOpen: true,

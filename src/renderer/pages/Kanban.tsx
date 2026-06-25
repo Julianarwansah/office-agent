@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Plus,
@@ -255,7 +255,7 @@ interface FilterOption {
 }
 
 interface FilterDropdownProps {
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<{ size?: string | number; className?: string }>;
   label: string;
   options: FilterOption[];
   selected: string[];
@@ -356,7 +356,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({ icon: Icon, label, opti
 };
 
 interface FilterBadgeProps {
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<{ size?: string | number; className?: string }>;
   label: string;
   onRemove: () => void;
 }
@@ -582,8 +582,8 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<KanbanTaskStatus[]>([]);
-  const [priorityFilter, setPriorityFilter] = useState<KanbanTaskPriority[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [priorityFilter, setPriorityFilter] = useState<string[]>([]);
   const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -662,7 +662,7 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
     return map;
   }, [tasksByColumn, debouncedSearch, statusFilter, priorityFilter, assigneeFilter]);
 
-  const hasActiveFilters = debouncedSearch || statusFilter.length > 0 || priorityFilter.length > 0 || assigneeFilter.length > 0;
+  const hasActiveFilters = !!(debouncedSearch || statusFilter.length > 0 || priorityFilter.length > 0 || assigneeFilter.length > 0);
 
   async function handleRefresh() {
     setRefreshing(true);
@@ -852,7 +852,7 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
             <FilterBadge
               key={s}
               icon={Flag}
-              label={STATUS_LABEL[s]}
+              label={STATUS_LABEL[s as KanbanTaskStatus]}
               onRemove={() => setStatusFilter((prev) => prev.filter((x) => x !== s))}
             />
           ))}

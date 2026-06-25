@@ -147,7 +147,7 @@ const ChatRoomPage: React.FC = () => {
           senderId: 'user',
         }));
         // Add reply to store
-        set((s) => {
+        useChatRoomsStore.setState((s) => {
           const existing = s.messagesByRoom[effectiveId] ?? [];
           return {
             messagesByRoom: {

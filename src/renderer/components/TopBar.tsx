@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Sun, Moon, Laptop, ExternalLink, Activity, type LucideIcon } from 'lucide-react';
+import { Sun, Moon, Laptop, ExternalLink, Activity, Bell, type LucideIcon } from 'lucide-react';
 import { useAppStore } from '../stores/app';
+import { useNotificationsStore } from '../stores/notifications';
+import NotificationPanel from './NotificationPanel';
 import type { AppTheme } from '../../shared/types';
 
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
@@ -29,8 +31,16 @@ function getPageMeta(pathname: string): { title: string; subtitle?: string } {
 
 const TopBar: React.FC = () => {
   const { theme, setTheme, localhostUrl } = useAppStore();
+  const { unreadCount, loadNotifications, refreshUnreadCount } = useNotificationsStore();
   const location = useLocation();
   const meta = getPageMeta(location.pathname);
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  useEffect(() => {
+    loadNotifications();
+    const interval = setInterval(refreshUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [loadNotifications, refreshUnreadCount]);
 
   const themeOptions: Array<{ value: AppTheme; icon: LucideIcon; label: string }> = [
     { value: 'light', icon: Sun, label: 'Light' },
@@ -50,6 +60,23 @@ const TopBar: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Notification bell */}
+        <div className="relative">
+          <button
+            onClick={() => setNotifOpen(!notifOpen)}
+            className="relative rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-zinc-800 dark:hover:text-slate-300"
+            title="Notifikasi"
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+          <NotificationPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
+        </div>
+
         {localhostUrl && (
           <a
             href={localhostUrl}

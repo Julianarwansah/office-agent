@@ -72,7 +72,7 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
     try {
       const [list, userList] = await Promise.all([
         api.skills.list(),
-        api.skills.listUser().catch(() => null),
+        api.skills.listUser().catch((err) => { console.error('[SkillsStore] Failed to load user skills:', err); return null; }),
       ]);
       const skills = unwrap(list) as unknown as Skill[];
       const userSkills = userList ? (unwrap(userList) as unknown as UserSkillRecord[]) : [];

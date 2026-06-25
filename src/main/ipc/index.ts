@@ -21,6 +21,7 @@ import { registerTerminalHandlers, type TerminalHandlerDeps } from './terminal';
 import { registerAppHandlers, type AppHandlerDeps } from './app';
 import { registerKanbanHandlers, type KanbanHandlerDeps } from './kanban';
 import { registerAnalyticsHandlers, type AnalyticsHandlerDeps } from './analytics';
+import { registerNotificationHandlers } from './notifications';
 
 import type { App as ElectronApp } from 'electron';
 import type { ProviderManager } from '../llm';
@@ -136,6 +137,8 @@ export function registerAllIpcHandlers(deps: RegisterAllIpcDeps): void {
     toolExecutions: repos.toolExecutions,
   };
   registerAnalyticsHandlers(analyticsDeps);
+
+  registerNotificationHandlers();
 
   // Suppress unused-var warning for skillExecutor — the orchestrator
   // already has a reference, but we keep this in the deps bag so the

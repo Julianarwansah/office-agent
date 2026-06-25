@@ -201,6 +201,69 @@ intents:
         mode: autopilot
         depends_on:
           - analytics-ui-page
+  - id: bug-fix-audit-v2
+    title: Bug Fix & Type Error Audit v2
+    status: completed
+    work_items:
+      - id: fix-chatroom-reply-crash
+        title: Fix ChatRoom.tsx Reply Crash — Undefined `set`
+        status: completed
+        complexity: low
+        mode: autopilot
+        run_id: run-office-agent-004
+        completed_at: 2026-06-25T08:31:05.668Z
+      - id: fix-kanban-type-errors
+        title: Fix Kanban.tsx useRef Import + Type Errors
+        status: completed
+        complexity: low
+        mode: autopilot
+        run_id: run-office-agent-004
+        completed_at: 2026-06-25T08:31:05.668Z
+      - id: improve-silent-error-handling
+        title: Improve Silent Error Handling in Stores
+        status: completed
+        complexity: low
+        mode: autopilot
+        run_id: run-office-agent-004
+        completed_at: 2026-06-25T08:31:05.668Z
+  - id: notification-center
+    title: Notification Center
+    status: completed
+    work_items:
+      - id: notification-db-schema
+        title: Notifications Database Schema
+        status: completed
+        complexity: low
+        mode: autopilot
+        run_id: run-office-agent-005
+        completed_at: 2026-06-25T08:58:38.943Z
+      - id: notification-backend-ipc
+        title: Notification Backend IPC Handlers
+        status: completed
+        complexity: low
+        mode: autopilot
+        depends_on:
+          - notification-db-schema
+        run_id: run-office-agent-005
+        completed_at: 2026-06-25T08:58:38.943Z
+      - id: notification-store
+        title: Notification Zustand Store
+        status: completed
+        complexity: low
+        mode: autopilot
+        depends_on:
+          - notification-backend-ipc
+        run_id: run-office-agent-005
+        completed_at: 2026-06-25T08:58:38.943Z
+      - id: notification-ui
+        title: Notification Bell UI in TopBar
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - notification-store
+        run_id: run-office-agent-005
+        completed_at: 2026-06-25T08:58:38.943Z
 runs:
   active: []
   completed:
@@ -220,3 +283,34 @@ runs:
           mode: confirm
       started: 2026-06-25T02:51:13.977Z
       completed: 2026-06-25T06:28:08.201Z
+    - id: run-office-agent-004
+      scope: batch
+      work_items:
+        - id: fix-chatroom-reply-crash
+          intent: bug-fix-audit-v2
+          mode: autopilot
+        - id: fix-kanban-type-errors
+          intent: bug-fix-audit-v2
+          mode: autopilot
+        - id: improve-silent-error-handling
+          intent: bug-fix-audit-v2
+          mode: autopilot
+      started: 2026-06-25T08:25:01.374Z
+      completed: 2026-06-25T08:31:05.668Z
+    - id: run-office-agent-005
+      scope: batch
+      work_items:
+        - id: notification-db-schema
+          intent: notification-center
+          mode: autopilot
+        - id: notification-backend-ipc
+          intent: notification-center
+          mode: autopilot
+        - id: notification-store
+          intent: notification-center
+          mode: autopilot
+        - id: notification-ui
+          intent: notification-center
+          mode: confirm
+      started: 2026-06-25T08:39:29.266Z
+      completed: 2026-06-25T08:58:38.943Z

@@ -31,6 +31,7 @@ import type {
   LLMProvider,
   Memory,
   Message,
+  Notification,
   Skill,
   Team,
   Workspace,
@@ -540,6 +541,25 @@ const officeAPI: OfficeAPI = {
     },
     addEvent(input) {
       return invoke<KanbanTaskEvent>(IPC_CHANNELS.KANBAN.ADD_EVENT, input);
+    },
+  },
+
+  /* ------------------------- Notifications ----------------------- */
+  notifications: {
+    list() {
+      return invoke<Notification[]>(IPC_CHANNELS.NOTIFICATIONS.LIST);
+    },
+    unreadCount() {
+      return invoke<number>(IPC_CHANNELS.NOTIFICATIONS.UNREAD_COUNT);
+    },
+    markRead(id) {
+      return invoke<void>(IPC_CHANNELS.NOTIFICATIONS.MARK_READ, id);
+    },
+    markAllRead() {
+      return invoke<void>(IPC_CHANNELS.NOTIFICATIONS.MARK_ALL_READ);
+    },
+    clearAll() {
+      return invoke<void>(IPC_CHANNELS.NOTIFICATIONS.CLEAR_ALL);
     },
   },
 

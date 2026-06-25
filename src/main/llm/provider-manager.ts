@@ -67,8 +67,9 @@ export class ProviderManager {
       try {
         const plain = this.decrypt(apiKey);
         if (plain != null) apiKey = plain;
-      } catch {
+      } catch (err) {
         // ignore decryption failures; treat as empty
+        console.warn('[ProviderManager] Failed to decrypt API key:', err);
         apiKey = '';
       }
     }
@@ -101,7 +102,8 @@ export class ProviderManager {
       try {
         const plain = this.decrypt(apiKey);
         if (plain != null) apiKey = plain;
-      } catch {
+      } catch (err) {
+        console.warn('[ProviderManager] Failed to decrypt API key:', err);
         apiKey = '';
       }
     }
@@ -139,7 +141,8 @@ export class ProviderManager {
       try {
         const plain = this.decrypt(apiKey);
         if (plain != null) apiKey = plain;
-      } catch {
+      } catch (err) {
+        console.warn('[ProviderManager] Failed to decrypt API key:', err);
         apiKey = '';
       }
     }

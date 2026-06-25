@@ -13,6 +13,7 @@
 
 import { AgentRunner } from './agent-runner';
 import { MemoryManager } from './memory-manager';
+import { notificationsRepo } from '../db/repositories/notifications';
 import type {
   Agent,
   ChatRoom,
@@ -58,6 +59,37 @@ export class Orchestrator {
         }),
     );
     this.runner = new AgentRunner(deps, this.memory);
+    this.setupNotificationListener();
+  }
+
+  private setupNotificationListener(): void {
+    this.deps.eventBus.on('agent:done', (payload) => {
+      try {
+        const agent = this.deps.agents.findById(payload.agentId);
+        notificationsRepo.create({
+          type: 'agent_done',
+          title: `${agent?.name ?? 'Agent'} selesai`,
+          message: payload.finalContent.slice(0, 200),
+          agentId: payload.agentId,
+        });
+      } catch {
+        // notification failure should not block orchestrator
+      }
+    });
+
+    this.deps.eventBus.on('agent:error', (payload) => {
+      try {
+        const agent = this.deps.agents.findById(payload.agentId);
+        notificationsRepo.create({
+          type: 'agent_error',
+          title: `${agent?.name ?? 'Agent'} error`,
+          message: payload.error,
+          agentId: payload.agentId,
+        });
+      } catch {
+        // notification failure should not block orchestrator
+      }
+    });
   }
 
   /* ------------------------------------------------------------------ */

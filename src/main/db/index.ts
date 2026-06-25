@@ -239,6 +239,19 @@ CREATE TABLE IF NOT EXISTS kanban_task_events (
 
 CREATE INDEX IF NOT EXISTS idx_kanban_events_task ON kanban_task_events(task_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_kanban_events_board ON kanban_task_events(board_id, created_at);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL DEFAULT '',
+  chatroom_id TEXT,
+  agent_id TEXT,
+  is_read INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
 `;
 
 interface PreparedEntry {
@@ -424,6 +437,23 @@ class DatabaseManager {
           CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(parent_id, created_at);
           -- Index untuk mengecek apakah message punya replies (covering index)
           CREATE INDEX IF NOT EXISTS idx_messages_has_replies ON messages(chatroom_id, parent_id) WHERE parent_id IS NOT NULL;
+        `,
+      },
+      {
+        name: '006_notifications',
+        up: `
+          CREATE TABLE IF NOT EXISTS notifications (
+            id TEXT PRIMARY KEY,
+            type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL DEFAULT '',
+            chatroom_id TEXT,
+            agent_id TEXT,
+            is_read INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL
+          );
+          CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(is_read);
+          CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
         `,
       },
     ];
