@@ -1,10 +1,9 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { Save, Plus, Trash2, Star, TestTube2, Loader2, Check, X, RotateCw, Zap, Activity, Network } from 'lucide-react';
+import { Save, Plus, Trash2, Star, Loader2, Check, X, Network } from 'lucide-react';
 import { useLLMStore, type TestResult } from '../stores/llm';
 import { useAppStore } from '../stores/app';
-import { useAgentsStore } from '../stores/agents';
 import { useWorkspaceStore } from '../stores/workspace';
-import TestConnectionButton, { TestResultDisplay, TestConnectionStatus } from '../components/TestConnectionButton';
+import TestConnectionButton, { TestResultDisplay } from '../components/TestConnectionButton';
 import LLMProviderEditor from '../components/LLMProviderEditor';
 import { cn } from '../lib/utils';
 import type { AppSettings, LLMProvider } from '../../shared/types';
@@ -473,7 +472,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
 };
 
 const WorkspaceTab: React.FC = () => {
-  const { workspaces, loadWorkspaces, setCurrentWorkspace, loading } = useWorkspaceStore();
+  const { workspaces, loading } = useWorkspaceStore();
   return (
     <div className="card p-6">
       <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Workspaces</h2>

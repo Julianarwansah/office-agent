@@ -23,7 +23,6 @@ import type {
   KanbanTask,
   KanbanTaskEvent,
   KanbanTaskEventType,
-  KanbanTaskPriority,
   KanbanTaskStatus,
   LLMTool,
   LLMProvider,

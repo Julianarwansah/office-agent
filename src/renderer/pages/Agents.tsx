@@ -12,7 +12,7 @@ import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 import type { Agent } from '../../shared/types';
 import type { AgentTemplate } from '../../shared/agent-templates';
-import { cn, getInitial, downloadFile } from '../lib/utils';
+import { getInitial, downloadFile } from '../lib/utils';
 import type { AgentFormData } from '../lib/types';
 import { incrementTemplateUsage } from '../lib/template-usage';
 

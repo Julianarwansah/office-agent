@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Save, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
+import { Save, RefreshCw, AlertCircle } from 'lucide-react';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import Input, { Textarea } from './ui/Input';

@@ -49,7 +49,6 @@ const ChatRoomPage: React.FC = () => {
   const sendMessage = useChatRoomsStore((s) => s.sendMessage);
   const cancelStream = useChatRoomsStore((s) => s.cancelStream);
   const removeMessage = useChatRoomsStore((s) => s.removeMessage);
-  const appendMessage = useChatRoomsStore((s) => s.appendMessage);
   const createChatRoom = useChatRoomsStore((s) => s.createChatRoom);
   const updateChatRoom = useChatRoomsStore((s) => s.updateChatRoom);
   const deleteChatRoom = useChatRoomsStore((s) => s.deleteChatRoom);
@@ -60,7 +59,6 @@ const ChatRoomPage: React.FC = () => {
 
   const agents = useAgentsStore((s) => s.agents);
   const loadAgents = useAgentsStore((s) => s.loadAgents);
-  const agentsLoading = useAgentsStore((s) => s.loadingAgents);
   const agentsError = useAgentsStore((s) => s.error);
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -81,8 +79,6 @@ const ChatRoomPage: React.FC = () => {
 
   // Export state
   const [exportOpen, setExportOpen] = useState(false);
-  const [exportFormat, setExportFormat] = useState<'markdown' | 'text'>('markdown');
-  const [exporting, setExporting] = useState(false);
 
   const effectiveId = chatRoomId ?? currentChatRoomId ?? null;
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Loader2, Plus, RefreshCw, Sparkles, Brain } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, Sparkles, Brain } from 'lucide-react';
 import { useAgentsStore } from '../stores/agents';
 import { useMemoriesStore } from '../stores/memories';
 import { useChatRoomsStore } from '../stores/chatrooms';

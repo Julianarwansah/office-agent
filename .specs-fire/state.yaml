@@ -264,6 +264,65 @@ intents:
           - notification-store
         run_id: run-office-agent-005
         completed_at: 2026-06-25T08:58:38.943Z
+  - id: comprehensive-audit-clean-code
+    title: Comprehensive Audit & Clean Code
+    status: completed
+    work_items:
+      - id: compile-and-type-audit
+        title: TypeScript Compilation & Type Safety Audit
+        status: completed
+        complexity: low
+        mode: autopilot
+        run_id: run-office-agent-006
+        completed_at: 2026-06-26T02:38:59.738Z
+      - id: error-handling-audit
+        title: Error Handling & Silent Error Audit
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - compile-and-type-audit
+        run_id: run-office-agent-006
+        completed_at: 2026-06-26T02:38:59.738Z
+      - id: database-data-integrity-audit
+        title: Database & Data Integrity Audit
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - compile-and-type-audit
+        run_id: run-office-agent-006
+        completed_at: 2026-06-26T02:38:59.738Z
+      - id: ui-ux-bug-audit
+        title: UI/UX Bug & Rendering Audit
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - error-handling-audit
+          - database-data-integrity-audit
+        run_id: run-office-agent-006
+        completed_at: 2026-06-26T02:38:59.738Z
+      - id: clean-code-review
+        title: Clean Code Principles Review
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - compile-and-type-audit
+          - error-handling-audit
+        run_id: run-office-agent-006
+        completed_at: 2026-06-26T02:38:59.738Z
+      - id: ipc-security-audit
+        title: IPC Security & Architecture Audit
+        status: completed
+        complexity: medium
+        mode: confirm
+        depends_on:
+          - error-handling-audit
+          - compile-and-type-audit
+        run_id: run-office-agent-006
+        completed_at: 2026-06-26T02:38:59.738Z
 runs:
   active: []
   completed:
@@ -314,3 +373,26 @@ runs:
           mode: confirm
       started: 2026-06-25T08:39:29.266Z
       completed: 2026-06-25T08:58:38.943Z
+    - id: run-office-agent-006
+      scope: wide
+      work_items:
+        - id: compile-and-type-audit
+          intent: comprehensive-audit-clean-code
+          mode: autopilot
+        - id: error-handling-audit
+          intent: comprehensive-audit-clean-code
+          mode: confirm
+        - id: database-data-integrity-audit
+          intent: comprehensive-audit-clean-code
+          mode: confirm
+        - id: ipc-security-audit
+          intent: comprehensive-audit-clean-code
+          mode: confirm
+        - id: clean-code-review
+          intent: comprehensive-audit-clean-code
+          mode: confirm
+        - id: ui-ux-bug-audit
+          intent: comprehensive-audit-clean-code
+          mode: confirm
+      started: 2026-06-26T02:10:45.679Z
+      completed: 2026-06-26T02:38:59.738Z

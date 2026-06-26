@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Folder, FolderOpen, FileText, RefreshCw, Plus, ExternalLink, FolderOpenDot, Loader2 } from 'lucide-react';
+import { Folder, FolderOpen, FileText, RefreshCw, Plus, ExternalLink, Loader2 } from 'lucide-react';
 import { useWorkspaceStore } from '../stores/workspace';
 import { useAppStore } from '../stores/app';
 import Button from '../components/ui/Button';
@@ -20,7 +20,6 @@ const WorkspacePage: React.FC = () => {
   const currentWorkspaceId = useWorkspaceStore((s) => s.currentWorkspaceId);
   const files = useWorkspaceStore((s) => s.files);
   const fileContent = useWorkspaceStore((s) => s.fileContent);
-  const loading = useWorkspaceStore((s) => s.loading);
   const loadingFiles = useWorkspaceStore((s) => s.loadingFiles);
   const error = useWorkspaceStore((s) => s.error);
   const loadWorkspaces = useWorkspaceStore((s) => s.loadWorkspaces);

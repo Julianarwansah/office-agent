@@ -3,7 +3,7 @@ import { Plus, Users, Trash2, Edit, ChevronDown, ChevronRight } from 'lucide-rea
 import { useAgentsStore } from '../stores/agents';
 import TeamEditor from '../components/TeamEditor';
 import type { Team } from '../../shared/types';
-import { cn, getInitial } from '../lib/utils';
+import { getInitial } from '../lib/utils';
 import type { TeamFormData } from '../lib/types';
 
 const TeamsPage: React.FC = () => {

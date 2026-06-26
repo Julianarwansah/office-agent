@@ -563,7 +563,6 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
   const createColumn = useKanbanStore((s) => s.createColumn);
   const updateColumn = useKanbanStore((s) => s.updateColumn);
   const deleteColumn = useKanbanStore((s) => s.deleteColumn);
-  const reorderColumns = useKanbanStore((s) => s.reorderColumns);
   const createTask = useKanbanStore((s) => s.createTask);
   const updateTask = useKanbanStore((s) => s.updateTask);
   const moveTask = useKanbanStore((s) => s.moveTask);
@@ -585,7 +584,6 @@ const BoardView: React.FC<BoardViewProps> = ({ boardId, onBack, agentsById }) =>
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [priorityFilter, setPriorityFilter] = useState<string[]>([]);
   const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);

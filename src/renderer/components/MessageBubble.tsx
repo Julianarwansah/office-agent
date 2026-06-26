@@ -291,7 +291,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
             {/* Avatars of thread participants */}
             <span className="ml-1 flex -space-x-1">
-              {visibleReplies.map((reply, idx) => (
+              {visibleReplies.map((reply) => (
                 <span
                   key={reply.id}
                   className={cn(

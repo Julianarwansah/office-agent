@@ -182,7 +182,7 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
       get().appendMessage(chatRoomId, userMsg);
 
       cleanupSubscriptions(get, set);
-      subscribeToEvents(get, set);
+      subscribeToEvents(set);
     } catch (err) {
       set({
         sendError: err instanceof Error ? err.message : 'Failed to send message',
@@ -224,7 +224,6 @@ export const useChatRoomsStore = create<ChatRoomsState>((set, get) => ({
 }));
 
 function subscribeToEvents(
-  get: () => ChatRoomsState,
   set: (partial: Partial<ChatRoomsState> | ((s: ChatRoomsState) => Partial<ChatRoomsState>)) => void,
 ): void {
   const subs: Array<() => void> = [];
